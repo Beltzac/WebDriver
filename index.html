@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebDriver GUI Navigator</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        #controls { margin-bottom: 20px; }
+        #sessionInfo { margin: 20px 0; padding: 10px; background: #f0f0f0; }
+        #elementTree { border: 1px solid #ddd; padding: 10px; height: 400px; overflow: auto; }
+        button { padding: 8px 12px; margin-right: 10px; }
+        .element { margin-left: 20px; cursor: pointer; }
+        .element:hover { background: #f0f0f0; }
+    </style>
+</head>
+<body>
+    <h1>WebDriver GUI Navigator</h1>
+
+    <div id="controls">
+        <button id="startSession">Start Session</button>
+        <button id="refreshElements">Refresh Elements</button>
+    </div>
+
+    <div id="sessionInfo">Session not started</div>
+
+    <div id="elementTree">No elements loaded</div>
+
+    <script>
+        let sessionId = null;
+
+        async function makeRequest(url, method, body = null) {
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            };
+            if (body) options.body = JSON.stringify(body);
+
+            try {
+                const response = await fetch(url, options);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return await response.json();
+            } catch (error) {
+                console.error('Request failed:', error);
+                throw error;
+            }
+        }
+
+        document.getElementById('startSession').addEventListener('click', async () => {
+            try {
+                const capabilities = {
+                    capabilities: {
+                        alwaysMatch: {
+                            platformName: "windows",
+                            "appium:automationName": "flaui",
+                            "appium:app": "C:\\Users\\Beltzac\\Downloads\\CTOSTEST\\CTOS1TEST\\DIS\\CM.CTOS.WinUIAdmin.exe"
+                        },
+                        firstMatch: [{}]
+                    }
+                };
+
+                const data = await makeRequest('http://localhost:5000/session', 'POST', capabilities);
+                sessionId = data.value.sessionId;
+                document.getElementById('sessionInfo').innerHTML =
+                    `Session ID: ${sessionId}<br>Capabilities: ${JSON.stringify(data.value.capabilities)}`;
+
+            } catch (error) {
+                document.getElementById('sessionInfo').innerHTML =
+                    `Error: ${error.message}`;
+            }
+        });
+
+        async function getElements() {
+            if (!sessionId) return [];
+
+            try {
+                const data = await makeRequest(
+                    `http://localhost:5000/session/${sessionId}/elements`,
+                    'POST',
+                    { using: 'xpath', value: '//*' }
+                );
+                return data.value;
+            } catch (error) {
+                console.error('Error getting elements:', error);
+                return [];
+            }
+        }
+
+        async function buildElementTree() {
+            const elements = await getElements();
+            let html = '<div class="tree">';
+
+            elements.forEach(element => {
+                const elementId = Object.values(element)[0];
+                html += `<div class="element" data-id="${elementId}">
+                    ${elementId}
+                </div>`;
+            });
+
+            html += '</div>';
+            document.getElementById('elementTree').innerHTML = html;
+
+            document.querySelectorAll('.element').forEach(el => {
+                el.addEventListener('click', async () => {
+                    try {
+                        const elementId = el.getAttribute('data-id').trim();
+                        await makeRequest(
+                            `http://localhost:5000/session/${sessionId}/element/${elementId}/click`,
+                            'POST'
+                        );
+                        el.style.backgroundColor = '#d4edda';
+                    } catch (error) {
+                        console.error('Error clicking element:', error);
+                    }
+                });
+            });
+        }
+
+        document.getElementById('refreshElements').addEventListener('click', buildElementTree);
+    </script>
+</body>
+</html>
