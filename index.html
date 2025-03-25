@@ -18,6 +18,7 @@
     <div id="controls">
         <button id="startSession">Start Session</button>
         <button id="refreshElements">Refresh Elements</button>
+        <button id="captureScreenshots">Capture Screenshots</button>
     </div>
 
     <div id="sessionInfo">Session not started</div>
@@ -223,6 +224,31 @@
         }
 
         document.getElementById('refreshElements').addEventListener('click', buildElementTree);
+
+        document.getElementById('captureScreenshots').addEventListener('click', async () => {
+            if (!sessionId) {
+                alert('Please start a session first');
+                return;
+            }
+
+            const elements = await getElements();
+            for (const element of elements) {
+                const elementId = Object.values(element)[0];
+                try {
+                    const response = await makeRequest(
+                        `http://localhost:5000/session/${sessionId}/element/${elementId}/screenshot`,
+                        'GET'
+                    );
+                    const img = document.createElement('img');
+                    img.src = `data:image/png;base64,${response.value}`;
+                    img.style.maxWidth = '300px';
+                    img.style.margin = '10px';
+                    document.getElementById('elementTree').appendChild(img);
+                } catch (error) {
+                    console.error('Error capturing screenshot:', error);
+                }
+            }
+        });
     </script>
 </body>
 </html>
