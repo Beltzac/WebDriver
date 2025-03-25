@@ -75,30 +75,34 @@
             if (!sessionId) return null;
 
             try {
-                const response = await makeRequest(
-                    `http://localhost:5000/session/${sessionId}/element/${elementId}/attribute/Name`,
-                    'GET'
-                );
-                const name = response.value;
-
-                const rect = await makeRequest(
-                    `http://localhost:5000/session/${sessionId}/element/${elementId}/rect`,
-                    'GET'
-                );
-
-                const enabled = await makeRequest(
-                    `http://localhost:5000/session/${sessionId}/element/${elementId}/enabled`,
-                    'GET'
-                );
+                const [nameRes, rectRes, enabledRes, tagNameRes] = await Promise.all([
+                    makeRequest(
+                        `http://localhost:5000/session/${sessionId}/element/${elementId}/attribute/Name`,
+                        'GET'
+                    ),
+                    makeRequest(
+                        `http://localhost:5000/session/${sessionId}/element/${elementId}/rect`,
+                        'GET'
+                    ),
+                    makeRequest(
+                        `http://localhost:5000/session/${sessionId}/element/${elementId}/enabled`,
+                        'GET'
+                    ),
+                    makeRequest(
+                        `http://localhost:5000/session/${sessionId}/element/${elementId}/name`,
+                        'GET'
+                    )
+                ]);
 
                 return {
                     id: elementId,
-                    name: name,
-                    x: rect.value.x,
-                    y: rect.value.y,
-                    width: rect.value.width,
-                    height: rect.value.height,
-                    enabled: enabled.value
+                    name: nameRes.value,
+                    type: tagNameRes.value,
+                    x: rectRes.value.x,
+                    y: rectRes.value.y,
+                    width: rectRes.value.width,
+                    height: rectRes.value.height,
+                    enabled: enabledRes.value
                 };
             } catch (error) {
                 console.error('Error getting element details:', error);
@@ -132,11 +136,13 @@
                     const details = await getElementDetails(elementId);
                     if (details) {
                         html += `<div class="element" data-id="${elementId}">
-                            <strong>${details.name || 'Unnamed'}</strong><br>
+                            <strong>${details.name || 'Unnamed'}</strong> (${details.type})<br>
                             ID: ${elementId}<br>
                             Position: (${details.x}, ${details.y})<br>
                             Size: ${details.width}x${details.height}<br>
-                            Enabled: ${details.enabled}
+                            Enabled: ${details.enabled}<br>
+                            <button class="action-btn" data-action="click" data-id="${elementId}">Click</button>
+                            <button class="action-btn" data-action="setValue" data-id="${elementId}">Set Value</button>
                         </div>`;
                     }
                 }
@@ -152,21 +158,34 @@
             html += '</div>';
             document.getElementById('elementTree').innerHTML = html;
 
-            document.querySelectorAll('.element').forEach(el => {
-                el.addEventListener('click', async () => {
-                    const elementId = el.getAttribute('data-id').trim();
-                    try {
-                        await makeRequest(
-                            `http://localhost:5000/session/${sessionId}/element/${elementId}/click`,
-                            'POST'
-                        );
-                        el.style.backgroundColor = '#d4edda';
+            document.querySelectorAll('.action-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const elementId = btn.getAttribute('data-id').trim();
+                    const action = btn.getAttribute('data-action');
 
-                        // Show more details in console
+                    try {
+                        if (action === 'click') {
+                            await makeRequest(
+                                `http://localhost:5000/session/${sessionId}/element/${elementId}/click`,
+                                'POST'
+                            );
+                            btn.style.backgroundColor = '#d4edda';
+                        } else if (action === 'setValue') {
+                            const value = prompt('Enter value to set:');
+                            if (value !== null) {
+                                await makeRequest(
+                                    `http://localhost:5000/session/${sessionId}/element/${elementId}/value`,
+                                    'POST',
+                                    { value: [value] }
+                                );
+                            }
+                        }
+
                         const details = await getElementDetails(elementId);
                         console.log('Element details:', details);
                     } catch (error) {
-                        console.error('Error interacting with element:', error);
+                        console.error('Error performing action:', error);
                     }
                 });
             });
