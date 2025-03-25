@@ -129,13 +129,13 @@
         async function buildElementTree() {
             try {
                 const elements = await getElements();
-                let html = '<div class="tree">';
+                let htmlContent = '<div class="tree">';
 
                 for (const element of elements) {
                     const elementId = Object.values(element)[0];
                     const details = await getElementDetails(elementId);
                     if (details) {
-                        html += `<div class="element" data-id="${elementId}">
+                        htmlContent += `<div class="element" data-id="${elementId}">
                             <strong>${details.name || 'Unnamed'}</strong> (${details.type})<br>
                             ID: ${elementId}<br>
                             Position: (${details.x}, ${details.y})<br>
@@ -147,16 +147,47 @@
                     }
                 }
 
-                html += '</div>';
-                document.getElementById('elementTree').innerHTML = html;
+                htmlContent += '</div>';
+                document.getElementById('elementTree').innerHTML = htmlContent;
+
+                // Event delegation for better performance
+                document.getElementById('elementTree').addEventListener('click', async (e) => {
+                    const btn = e.target.closest('.action-btn');
+                    if (!btn) return;
+
+                    e.stopPropagation();
+                    const elementId = btn.getAttribute('data-id').trim();
+                    const action = btn.getAttribute('data-action');
+
+                    try {
+                        if (action === 'click') {
+                            await makeRequest(
+                                `http://localhost:5000/session/${sessionId}/element/${elementId}/click`,
+                                'POST'
+                            );
+                            btn.style.backgroundColor = '#d4edda';
+                        } else if (action === 'setValue') {
+                            const value = prompt('Enter value to set:');
+                            if (value !== null) {
+                                await makeRequest(
+                                    `http://localhost:5000/session/${sessionId}/element/${elementId}/value`,
+                                    'POST',
+                                    { value: [value] }
+                                );
+                            }
+                        }
+
+                        const details = await getElementDetails(elementId);
+                        console.log('Element details:', details);
+                    } catch (error) {
+                        console.error('Error performing action:', error);
+                    }
+                });
             } catch (error) {
                 console.error('Error building element tree:', error);
                 document.getElementById('elementTree').innerHTML =
                     'Error loading elements';
             }
-
-            html += '</div>';
-            document.getElementById('elementTree').innerHTML = html;
 
             document.querySelectorAll('.action-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
