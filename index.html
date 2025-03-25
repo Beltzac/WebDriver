@@ -71,6 +71,41 @@
             }
         });
 
+        async function getElementDetails(elementId) {
+            if (!sessionId) return null;
+
+            try {
+                const response = await makeRequest(
+                    `http://localhost:5000/session/${sessionId}/element/${elementId}/attribute/Name`,
+                    'GET'
+                );
+                const name = response.value;
+
+                const rect = await makeRequest(
+                    `http://localhost:5000/session/${sessionId}/element/${elementId}/rect`,
+                    'GET'
+                );
+
+                const enabled = await makeRequest(
+                    `http://localhost:5000/session/${sessionId}/element/${elementId}/enabled`,
+                    'GET'
+                );
+
+                return {
+                    id: elementId,
+                    name: name,
+                    x: rect.value.x,
+                    y: rect.value.y,
+                    width: rect.value.width,
+                    height: rect.value.height,
+                    enabled: enabled.value
+                };
+            } catch (error) {
+                console.error('Error getting element details:', error);
+                return null;
+            }
+        }
+
         async function getElements() {
             if (!sessionId) return [];
 
@@ -88,30 +123,50 @@
         }
 
         async function buildElementTree() {
-            const elements = await getElements();
-            let html = '<div class="tree">';
+            try {
+                const elements = await getElements();
+                let html = '<div class="tree">';
 
-            elements.forEach(element => {
-                const elementId = Object.values(element)[0];
-                html += `<div class="element" data-id="${elementId}">
-                    ${elementId}
-                </div>`;
-            });
+                for (const element of elements) {
+                    const elementId = Object.values(element)[0];
+                    const details = await getElementDetails(elementId);
+                    if (details) {
+                        html += `<div class="element" data-id="${elementId}">
+                            <strong>${details.name || 'Unnamed'}</strong><br>
+                            ID: ${elementId}<br>
+                            Position: (${details.x}, ${details.y})<br>
+                            Size: ${details.width}x${details.height}<br>
+                            Enabled: ${details.enabled}
+                        </div>`;
+                    }
+                }
+
+                html += '</div>';
+                document.getElementById('elementTree').innerHTML = html;
+            } catch (error) {
+                console.error('Error building element tree:', error);
+                document.getElementById('elementTree').innerHTML =
+                    'Error loading elements';
+            }
 
             html += '</div>';
             document.getElementById('elementTree').innerHTML = html;
 
             document.querySelectorAll('.element').forEach(el => {
                 el.addEventListener('click', async () => {
+                    const elementId = el.getAttribute('data-id').trim();
                     try {
-                        const elementId = el.getAttribute('data-id').trim();
                         await makeRequest(
                             `http://localhost:5000/session/${sessionId}/element/${elementId}/click`,
                             'POST'
                         );
                         el.style.backgroundColor = '#d4edda';
+
+                        // Show more details in console
+                        const details = await getElementDetails(elementId);
+                        console.log('Element details:', details);
                     } catch (error) {
-                        console.error('Error clicking element:', error);
+                        console.error('Error interacting with element:', error);
                     }
                 });
             });
