@@ -44,7 +44,13 @@
 
             try {
                 const response = await fetch(url, options);
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    if (errorData.value && errorData.value.error === 'invalid session id') {
+                        await endSession('invalid session');
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 return await response.json();
             } catch (error) {
                 console.error('Request failed:', error);
@@ -67,10 +73,11 @@
             } catch (error) {
                 console.error('Failed to delete session on server:', error);
             }
+            const oldSessionId = sessionId;
             sessionId = null;
             clearTimeout(sessionTimer);
             sessionTimer = null;
-            document.getElementById('sessionInfo').innerHTML = `Session ${reason}.`;
+            document.getElementById('sessionInfo').innerHTML = `Session ${oldSessionId} ${reason}.`;
             document.getElementById('elementTree').innerHTML = 'No elements loaded';
             document.getElementById('timerDisplay').textContent = '';
             document.getElementById('startSession').disabled = false;
