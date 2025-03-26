@@ -18,7 +18,6 @@
     <div id="controls">
         <button id="startSession">Start Session</button>
         <button id="refreshElements">Refresh Elements</button>
-        <button id="captureScreenshots">Capture Screenshots</button>
     </div>
 
     <div id="sessionInfo">Session not started</div>
@@ -135,8 +134,32 @@
                 for (const element of elements) {
                     const elementId = Object.values(element)[0];
                     const details = await getElementDetails(elementId);
-                    if (details) {
-                        htmlContent += `<div class="element" data-id="${elementId}">
+                    if (!details) continue;
+
+                    try {
+                        const screenshotRes = await makeRequest(
+                            `http://localhost:5000/session/${sessionId}/element/${elementId}/screenshot`,
+                            'GET'
+                        );
+                        htmlContent += `
+                        <div class="element" data-id="${elementId}">
+                            <div style="display: flex; gap: 20px; align-items: center;">
+                                <div>
+                                    <strong>${details.name || 'Unnamed'}</strong> (${details.type})<br>
+                                    ID: ${elementId}<br>
+                                    Position: (${details.x}, ${details.y})<br>
+                                    Size: ${details.width}x${details.height}<br>
+                                    Enabled: ${details.enabled}<br>
+                                    <button class="action-btn" data-action="click" data-id="${elementId}">Click</button>
+                                    <button class="action-btn" data-action="setValue" data-id="${elementId}">Set Value</button>
+                                </div>
+                                <img src="data:image/png;base64,${screenshotRes.value}" style="max-width: 200px; border: 1px solid #ddd;">
+                            </div>
+                        </div>`;
+                    } catch (error) {
+                        console.error('Error getting screenshot:', error);
+                        htmlContent += `
+                        <div class="element" data-id="${elementId}">
                             <strong>${details.name || 'Unnamed'}</strong> (${details.type})<br>
                             ID: ${elementId}<br>
                             Position: (${details.x}, ${details.y})<br>
@@ -151,7 +174,7 @@
                 htmlContent += '</div>';
                 document.getElementById('elementTree').innerHTML = htmlContent;
 
-                // Event delegation for better performance
+                // Event delegation for click actions
                 document.getElementById('elementTree').addEventListener('click', async (e) => {
                     const btn = e.target.closest('.action-btn');
                     if (!btn) return;
@@ -170,6 +193,7 @@
                         } else if (action === 'setValue') {
                             const value = prompt('Enter value to set:');
                             if (value !== null) {
+
                                 await makeRequest(
                                     `http://localhost:5000/session/${sessionId}/element/${elementId}/value`,
                                     'POST',
@@ -177,78 +201,17 @@
                                 );
                             }
                         }
-
-                        const details = await getElementDetails(elementId);
-                        console.log('Element details:', details);
                     } catch (error) {
                         console.error('Error performing action:', error);
                     }
                 });
             } catch (error) {
                 console.error('Error building element tree:', error);
-                document.getElementById('elementTree').innerHTML =
-                    'Error loading elements';
+                document.getElementById('elementTree').innerHTML = 'Error loading elements';
             }
-
-            document.querySelectorAll('.action-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    e.stopPropagation();
-                    const elementId = btn.getAttribute('data-id').trim();
-                    const action = btn.getAttribute('data-action');
-
-                    try {
-                        if (action === 'click') {
-                            await makeRequest(
-                                `http://localhost:5000/session/${sessionId}/element/${elementId}/click`,
-                                'POST'
-                            );
-                            btn.style.backgroundColor = '#d4edda';
-                        } else if (action === 'setValue') {
-                            const value = prompt('Enter value to set:');
-                            if (value !== null) {
-                                await makeRequest(
-                                    `http://localhost:5000/session/${sessionId}/element/${elementId}/value`,
-                                    'POST',
-                                    { value: [value] }
-                                );
-                            }
-                        }
-
-                        const details = await getElementDetails(elementId);
-                        console.log('Element details:', details);
-                    } catch (error) {
-                        console.error('Error performing action:', error);
-                    }
-                });
-            });
         }
 
         document.getElementById('refreshElements').addEventListener('click', buildElementTree);
-
-        document.getElementById('captureScreenshots').addEventListener('click', async () => {
-            if (!sessionId) {
-                alert('Please start a session first');
-                return;
-            }
-
-            const elements = await getElements();
-            for (const element of elements) {
-                const elementId = Object.values(element)[0];
-                try {
-                    const response = await makeRequest(
-                        `http://localhost:5000/session/${sessionId}/element/${elementId}/screenshot`,
-                        'GET'
-                    );
-                    const img = document.createElement('img');
-                    img.src = `data:image/png;base64,${response.value}`;
-                    img.style.maxWidth = '300px';
-                    img.style.margin = '10px';
-                    document.getElementById('elementTree').appendChild(img);
-                } catch (error) {
-                    console.error('Error capturing screenshot:', error);
-                }
-            }
-        });
     </script>
 </body>
 </html>
