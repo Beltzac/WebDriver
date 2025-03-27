@@ -250,6 +250,7 @@ public class WebDriverNavigator : Form
             _sessionInfo.Text = $"Session ID: {_sessionId}";
             _startSessionBtn.Enabled = false;
             _refreshElementsBtn.Enabled = true;
+            Log("Session started successfully", Color.Green);
 
             _timeoutDuration = (int)_timeoutInput.Value;
             ResetSessionTimer();
@@ -401,6 +402,7 @@ public class WebDriverNavigator : Form
         _driver.SwitchTo().Window(win.First());
         await BuildElementTree();
         ResetSessionTimer();
+        Log("Elements refreshed successfully", Color.Green);
     }
 
     private void Open_Click(object sender, EventArgs e)
@@ -426,6 +428,7 @@ public class WebDriverNavigator : Form
                     .SendKeys(OpenQA.Selenium.Keys.Enter)
                     .SendKeys(OpenQA.Selenium.Keys.Enter)
                     .Perform();
+           Log("Open operation completed successfully", Color.Green);
 
 
 
@@ -460,6 +463,7 @@ public class WebDriverNavigator : Form
 
             //if (truckBtn.Displayed)
             truckBtn.Click();
+            Log("Truck transaction opened successfully", Color.Green);
         }
         catch(Exception ex)
         {
@@ -473,7 +477,7 @@ public class WebDriverNavigator : Form
         {
             var win = _driver.WindowHandles;
             _driver.SwitchTo().Window(win.First());
-    
+
             _driver.FindElement(By.Id("txtUserName")).Click();
             //_driver.FindElement(By.Name("Login")).Click();
 
@@ -481,8 +485,9 @@ public class WebDriverNavigator : Form
             _driver.FindElement(By.Id("txtPassword")).SendKeys("Hunt93cexx33");
             _driver.FindElement(By.Id("btnOK")).Click();
 
-            WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(5));
+            WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
             wait.Until(d => _driver.WindowHandles.Count > 0);
+            Log("Login successful", Color.Green);
 
             //_driver.SwitchTo().Window("CTOS DIS");
             // _driver.SwitchTo().DefaultContent();
