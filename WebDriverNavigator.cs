@@ -244,7 +244,7 @@ public class WebDriverNavigator : Form
 
 
 
-            _sessionId = ((OpenQA.Selenium.Remote.RemoteWebDriver)_driver).SessionId.ToString();
+            //_sessionId = _driver.Manage(). SessionId.ToString();
             _sessionActive = true;
 
             _sessionInfo.Text = $"Session ID: {_sessionId}";
@@ -404,10 +404,13 @@ public class WebDriverNavigator : Form
     {
         try
         {
-            var gateBtn = _driver.FindElement(By.Name("Gate Processing"));
+            var win = _driver.WindowHandles;
+            _driver.SwitchTo().Window(win.First());
 
-            //if (gateBtn.Displayed)
-            gateBtn.Click();
+            //var gateBtn = _driver.FindElement(By.Name("Gate Processing"));
+
+            ////if (gateBtn.Displayed)
+            //gateBtn.Click();
 
             if (_driver != null)
             {
