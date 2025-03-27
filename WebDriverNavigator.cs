@@ -1,9 +1,13 @@
 using OpenQA.Selenium;
+using OpenQA.Selenium.Appium;
+using OpenQA.Selenium.Appium.Enums;
+using OpenQA.Selenium.Appium.Windows;
 using OpenQA.Selenium.Remote;
 using OpenQA.Selenium.Support.UI;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -17,6 +21,7 @@ public class WebDriverNavigator : Form
     private bool _sessionActive = false;
 
     private Button _startSessionBtn;
+    private Button _truckBtn;
     private Button _refreshElementsBtn;
     private NumericUpDown _timeoutInput;
     private Label _timerDisplay;
@@ -54,9 +59,18 @@ public class WebDriverNavigator : Form
             Text = "Refresh Elements",
             Location = new Point(150, 20),
             AutoSize = true,
-            Enabled = false
+            //Enabled = false
         };
         _refreshElementsBtn.Click += RefreshElements_Click;
+
+        _truckBtn = new Button
+        {
+            Text = "Truck Transactions",
+            Location = new Point(500, 20),
+            AutoSize = true,
+            //Enabled = false
+        };
+        _truckBtn.Click += gate_Click;
 
         var timeoutLabel = new Label
         {
@@ -79,7 +93,7 @@ public class WebDriverNavigator : Form
         };
 
         controlsPanel.Controls.AddRange(new Control[] {
-            _startSessionBtn, _refreshElementsBtn, timeoutLabel, _timeoutInput, _timerDisplay
+            _startSessionBtn, _refreshElementsBtn, timeoutLabel, _timeoutInput, _timerDisplay, _truckBtn
         });
 
         // Session info
@@ -109,23 +123,25 @@ public class WebDriverNavigator : Form
         _sessionTimer.Tick += SessionTimer_Tick;
     }
 
-    public class FlaUIDriverOptions : DriverOptions
+    public class FlaUIDriverOptions : AppiumOptions
     {
         public static FlaUIDriverOptions ForApp(string path)
         {
             var options = new FlaUIDriverOptions()
             {
-                PlatformName = "windows"
+                PlatformName = "windows",
+                AutomationName = "flaui",
+                App = path
             };
-            options.AddAdditionalOption("appium:automationName", "flaui");
-            options.AddAdditionalOption("appium:app", path);
+            //options.AutomationName AddAdditionalAppiumOption("appium:automationName", "flaui");
+            //options.AddAdditionalAppiumOption("appium:app", path);
             return options;
         }
 
-        public override ICapabilities ToCapabilities()
-        {
-            return GenerateDesiredCapabilities(true);
-        }
+        //public override ICapabilities ToCapabilities()
+        //{
+        //    return GenerateDesiredCapabilities(true);
+        //}
     }
 
 
@@ -136,8 +152,21 @@ public class WebDriverNavigator : Form
             //var options = new OpenQA.Selenium.Chrome.ChromeOptions();
             //_driver = new OpenQA.Selenium. Chrome.ChromeDriver(options);
 
-            _driver = new RemoteWebDriver(new Uri("http://localhost:5000"), FlaUIDriverOptions.ForApp("C:\\Users\\Beltzac\\Downloads\\CTOSTEST\\CTOS1TEST\\DIS\\CM.CTOS.WinUIAdmin.exe"));
+            var opt = FlaUIDriverOptions.ForApp("C:\\Users\\Beltzac\\Downloads\\CTOSTEST\\CTOS1TEST\\DIS\\CM.CTOS.WinUIAdmin.exe");
+            _driver = new WindowsDriver(new Uri("http://localhost:5000"), opt);
+            //_driver = new RemoteWebDriver(new Uri("http://localhost:5000"), FlaUIDriverOptions.ForApp("calc.exe"));
 
+            _driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(2);
+
+            _driver.FindElement(By.Id("txtUserName")).SendKeys("ahoy.abeltzac");
+            _driver.FindElement(By.Id("txtPassword")).SendKeys("Hunt93cexx33");
+            _driver.FindElement(By.Id("btnOK")).Click();
+
+            WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(5));
+            wait.Until(d => _driver.WindowHandles.Count > 0);
+
+            //_driver.SwitchTo().Window("CTOS DIS");
+            _driver.SwitchTo().DefaultContent();
 
             _sessionId = ((OpenQA.Selenium.Remote.RemoteWebDriver)_driver).SessionId.ToString();
             _sessionActive = true;
@@ -179,7 +208,7 @@ public class WebDriverNavigator : Form
         if (_timeoutDuration <= 0)
         {
             _sessionTimer.Stop();
-            EndSession("timed out");
+            //EndSession("timed out");
         }
     }
 
@@ -194,7 +223,7 @@ public class WebDriverNavigator : Form
             _elementTree.Nodes.Clear();
             _timerDisplay.Text = "";
             _startSessionBtn.Enabled = true;
-            _refreshElementsBtn.Enabled = false;
+            //_refreshElementsBtn.Enabled = false;
             _sessionActive = false;
         }
         catch (Exception ex)
@@ -205,7 +234,7 @@ public class WebDriverNavigator : Form
 
     private async Task BuildElementTree()
     {
-        if (!_sessionActive) return;
+        //if (!_sessionActive) return;
 
         try
         {
@@ -214,28 +243,69 @@ public class WebDriverNavigator : Form
 
             foreach (var element in elements)
             {
-                var node = new TreeNode($"{element.TagName} - {element.Text}")
-                {
-                    Tag = element
-                };
-
                 try
                 {
                     var location = element.Location;
                     var size = element.Size;
                     var enabled = element.Enabled;
+                    var name = element.GetDomAttribute("Name");
+                    var tagName = element.TagName;
 
-                    node.ToolTipText = $"Position: ({location.X}, {location.Y})\n" +
-                                       $"Size: {size.Width}x{size.Height}\n" +
-                                       $"Enabled: {enabled}";
+                    var node = new TreeNode($"{name ?? "Unnamed"} ({tagName})")
+                    {
+                        Tag = element,
+                        ToolTipText = $"ID: {element}\n" +
+                                      $"Position: ({location.X}, {location.Y})\n" +
+                                      $"Size: {size.Width}x{size.Height}\n" +
+                                      $"Enabled: {enabled}"
+                    };
+
+                    // Add action buttons as child nodes
+                    var clickNode = new TreeNode("Click") { Tag = new { Action = "click", Element = element } };
+                    var setValueNode = new TreeNode("Set Value") { Tag = new { Action = "setValue", Element = element } };
+
+                    node.Nodes.Add(clickNode);
+                    node.Nodes.Add(setValueNode);
+
+                    _elementTree.Nodes.Add(node);
                 }
                 catch (StaleElementReferenceException)
                 {
                     continue;
                 }
-
-                _elementTree.Nodes.Add(node);
             }
+
+            // Add event handler for node clicks
+            _elementTree.NodeMouseClick += async (sender, e) =>
+            {
+                if (e.Node?.Tag is { } tag && tag.GetType().GetProperty("Action") != null)
+                {
+                    dynamic actionInfo = tag;
+                    var element = (IWebElement)actionInfo.Element;
+                    var action = (string)actionInfo.Action;
+
+                    try
+                    {
+                        if (action == "click")
+                        {
+                            element.Click();
+                            e.Node.BackColor = Color.LightGreen;
+                        }
+                        else if (action == "setValue")
+                        {
+                            var value = Microsoft.VisualBasic.Interaction.InputBox("Enter value:", "Set Value", "");
+                            if (!string.IsNullOrEmpty(value))
+                            {
+                                element.SendKeys(value);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Error performing action: {ex.Message}");
+                    }
+                }
+            };
         }
         catch (Exception ex)
         {
@@ -245,8 +315,36 @@ public class WebDriverNavigator : Form
 
     private async void RefreshElements_Click(object sender, EventArgs e)
     {
+        var win = _driver.WindowHandles;
+        _driver.SwitchTo().Window(win.First());
         await BuildElementTree();
         ResetSessionTimer();
+    }
+
+    private async void gate_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            var win = _driver.WindowHandles;
+            _driver.SwitchTo().Window(win.First());
+
+            var gateBtn = _driver.FindElement(By.Name("Gate Processing"));
+
+            //if (gateBtn.Displayed)
+            gateBtn.Click();
+
+            //WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(5));
+            //wait.Until(d => truckBtn.Displayed);
+
+            var truckBtn = _driver.FindElement(By.Name("Truck Transaction"));
+
+            //if (truckBtn.Displayed)
+            truckBtn.Click();
+        }
+        catch(Exception ex)
+        {
+            MessageBox.Show($"Error performing action: {ex.Message}");
+        }
     }
 
     [STAThread]
