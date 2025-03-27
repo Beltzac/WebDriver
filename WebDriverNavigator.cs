@@ -5,6 +5,7 @@ using OpenQA.Selenium.Appium.Windows;
 using OpenQA.Selenium.Interactions;
 using OpenQA.Selenium.Remote;
 using OpenQA.Selenium.Support.UI;
+using OpenQA.Selenium.Support.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -12,6 +13,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Utils;
 
 public class WebDriverNavigator : Form
 {
@@ -478,15 +480,30 @@ public class WebDriverNavigator : Form
             var win = _driver.WindowHandles;
             _driver.SwitchTo().Window(win.First());
 
-            _driver.FindElement(By.Id("txtUserName")).Click();
-            //_driver.FindElement(By.Name("Login")).Click();
+            // Find elements with timeout
+            var userNameField = _driver.FindElement(By.Id("txtUserName"), 10);
+            var passwordField = _driver.FindElement(By.Id("txtPassword"), 10);
+            var okButton = _driver.FindElement(By.Id("btnOK"), 10);
 
-            _driver.FindElement(By.Id("txtUserName")).SendKeys("ahoy.abeltzac");
-            _driver.FindElement(By.Id("txtPassword")).SendKeys("Hunt93cexx33");
-            _driver.FindElement(By.Id("btnOK")).Click();
+            // Wait for and interact with username field
+            WaitForElement(userNameField);
+            userNameField.Click();
+            userNameField.SendKeys("ahoy.abeltzac");
+            Log("Entered username", Color.Blue);
 
-            WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
-            wait.Until(d => _driver.WindowHandles.Count > 0);
+            // Wait for and interact with password field
+            WaitForElement(passwordField);
+            passwordField.SendKeys("Hunt93cexx33");
+            Log("Entered password", Color.Blue);
+
+            // Wait for and click OK button
+            WaitForElement(okButton);
+            okButton.Click();
+            Log("Clicked OK button", Color.Blue);
+
+            // Verify login success
+            new WebDriverWait(_driver, TimeSpan.FromSeconds(10))
+                .Until(d => _driver.WindowHandles.Count > 0);
             Log("Login successful", Color.Green);
 
             //_driver.SwitchTo().Window("CTOS DIS");
@@ -518,5 +535,18 @@ public class WebDriverNavigator : Form
             _logTextBox.AppendText($"{DateTime.Now:HH:mm:ss} - {message}{Environment.NewLine}");
             _logTextBox.SelectionColor = _logTextBox.ForeColor;
         }
+    }
+
+    private void WaitForElement(IWebElement element, int timeoutSeconds = 10)
+    {
+        var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(timeoutSeconds));
+        wait.Until(d => {
+            try {
+                return element.Displayed && element.Enabled;
+            }
+            catch {
+                return false;
+            }
+        });
     }
 }
