@@ -15,21 +15,26 @@ using System.Windows.Forms;
 
 public class WebDriverNavigator : Form
 {
+    // Session management
     private IWebDriver _driver;
     private string _sessionId;
+    private bool _sessionActive = false;
     private System.Windows.Forms.Timer _sessionTimer;
     private int _timeoutDuration = 300;
-    private bool _sessionActive = false;
 
-    private Button _startSessionBtn;
-    private Button _truckBtn;
-    private Button _refreshElementsBtn;
-    private Button _openBtn;
-    private Button _loginBtn;
-    private NumericUpDown _timeoutInput;
-    private Label _timerDisplay;
-    private Label _sessionInfo;
+    // UI Controls
+    private RichTextBox _logTextBox;
     private TreeView _elementTree;
+    private Label _sessionInfo;
+    private Label _timerDisplay;
+
+    // Buttons
+    private Button _startSessionBtn;
+    private Button _refreshElementsBtn;
+    private Button _loginBtn;
+    private Button _truckBtn;
+    private Button _openBtn;
+    private NumericUpDown _timeoutInput;
 
     public WebDriverNavigator()
     {
@@ -41,53 +46,36 @@ public class WebDriverNavigator : Form
         this.Text = "WebDriver GUI Navigator";
         this.Size = new Size(1000, 800);
 
-        // Controls panel
+        // Main controls panel
         var controlsPanel = new Panel
         {
             Dock = DockStyle.Top,
-            Height = 60,
-            Padding = new Padding(20)
+            Height = 100,
+            Padding = new Padding(10)
         };
 
+        // Session controls
         _startSessionBtn = new Button
         {
             Text = "Start Session",
-            Location = new Point(20, 20),
-            AutoSize = true
+            Location = new Point(10, 10),
+            Size = new Size(120, 30)
         };
         _startSessionBtn.Click += StartSession_Click;
 
         _refreshElementsBtn = new Button
         {
             Text = "Refresh Elements",
-            Location = new Point(150, 20),
-            AutoSize = true,
-            //Enabled = false
+            Location = new Point(140, 10),
+            Size = new Size(120, 30)
         };
         _refreshElementsBtn.Click += RefreshElements_Click;
 
-        _truckBtn = new Button
-        {
-            Text = "Truck Transactions",
-            Location = new Point(500, 20),
-            AutoSize = true,
-            //Enabled = false
-        };
-        _truckBtn.Click += gate_Click;
-
-        _openBtn = new Button
-        {
-            Text = "Open (Ctrl+O)",
-            Location = new Point(650, 20),
-            AutoSize = true,
-            //Enabled = false
-        };
-        _openBtn.Click += Open_Click;
-
+        // Timeout controls
         var timeoutLabel = new Label
         {
             Text = "Timeout (s):",
-            Location = new Point(280, 23),
+            Location = new Point(270, 15),
             AutoSize = true
         };
 
@@ -95,34 +83,95 @@ public class WebDriverNavigator : Form
         {
             Value = 30,
             Width = 60,
-            Location = new Point(360, 20)
+            Location = new Point(340, 10)
         };
 
         _timerDisplay = new Label
         {
-            Location = new Point(430, 23),
+            Location = new Point(410, 15),
             AutoSize = true
         };
 
+        // Action buttons
+        // Action buttons row 1
         _loginBtn = new Button
         {
             Text = "Login",
-            Location = new Point(300, 20),
-            AutoSize = true
+            Location = new Point(490, 10),
+            Size = new Size(80, 30)
         };
         _loginBtn.Click += Login_Click;
 
-        controlsPanel.Controls.AddRange(new Control[] {
-            _startSessionBtn, _refreshElementsBtn, _loginBtn, timeoutLabel, _timeoutInput, _timerDisplay, _truckBtn, _openBtn
-        });
+        _truckBtn = new Button
+        {
+            Text = "Truck",
+            Location = new Point(580, 10),
+            Size = new Size(80, 30)
+        };
+        _truckBtn.Click += gate_Click;
 
+        _openBtn = new Button
+        {
+            Text = "Open",
+            Location = new Point(670, 10),
+            Size = new Size(80, 30)
+        };
+        _openBtn.Click += Open_Click;
+
+        // Additional buttons (2 rows of 6)
+        var button2 = new Button { Text = "Button 2", Location = new Point(10, 50), Size = new Size(100, 30) };
+        button2.Click += (s, e) => { /* TODO: Implement */ };
+
+        var button3 = new Button { Text = "Button 3", Location = new Point(120, 50), Size = new Size(100, 30) };
+        button3.Click += (s, e) => { /* TODO: Implement */ };
+
+        var button4 = new Button { Text = "Button 4", Location = new Point(230, 50), Size = new Size(100, 30) };
+        button4.Click += (s, e) => { /* TODO: Implement */ };
+
+        var button5 = new Button { Text = "Button 5", Location = new Point(340, 50), Size = new Size(100, 30) };
+        button5.Click += (s, e) => { /* TODO: Implement */ };
+
+        var button6 = new Button { Text = "Button 6", Location = new Point(450, 50), Size = new Size(100, 30) };
+        button6.Click += (s, e) => { /* TODO: Implement */ };
+
+        var button7 = new Button { Text = "Button 7", Location = new Point(560, 50), Size = new Size(100, 30) };
+        button7.Click += (s, e) => { /* TODO: Implement */ };
+
+        var button8 = new Button { Text = "Button 8", Location = new Point(10, 90), Size = new Size(100, 30) };
+        button8.Click += (s, e) => { /* TODO: Implement */ };
+
+        var button9 = new Button { Text = "Button 9", Location = new Point(120, 90), Size = new Size(100, 30) };
+        button9.Click += (s, e) => { /* TODO: Implement */ };
+
+        var button10 = new Button { Text = "Button 10", Location = new Point(230, 90), Size = new Size(100, 30) };
+        button10.Click += (s, e) => { /* TODO: Implement */ };
+
+        var button11 = new Button { Text = "Button 11", Location = new Point(340, 90), Size = new Size(100, 30) };
+        button11.Click += (s, e) => { /* TODO: Implement */ };
+
+        var button12 = new Button { Text = "Button 12", Location = new Point(450, 90), Size = new Size(100, 30) };
+        button12.Click += (s, e) => { /* TODO: Implement */ };
+
+        var button13 = new Button { Text = "Button 13", Location = new Point(560, 90), Size = new Size(100, 30) };
+        button13.Click += (s, e) => { /* TODO: Implement */ };
+
+        // Log panel
+        // Log panel
+        _logTextBox = new RichTextBox
+        {
+            Dock = DockStyle.Bottom,
+            Height = 150,
+            Multiline = true,
+            ScrollBars = RichTextBoxScrollBars.Vertical,
+            ReadOnly = true
+        };
         // Session info
         _sessionInfo = new Label
         {
             Dock = DockStyle.Top,
             Text = "Session not started",
-            Padding = new Padding(20),
-            Height = 60,
+            Padding = new Padding(10),
+            Height = 40,
             BackColor = SystemColors.ControlLight
         };
 
@@ -134,8 +183,16 @@ public class WebDriverNavigator : Form
             ShowNodeToolTips = true
         };
 
+        // Add controls to panels
+        controlsPanel.Controls.AddRange(new Control[] {
+            _startSessionBtn, _refreshElementsBtn, timeoutLabel, _timeoutInput,
+            _timerDisplay, _loginBtn, _truckBtn, _openBtn,
+            button2, button3, button4, button5, button6, button7,
+            button8, button9, button10, button11, button12, button13
+        });
+
         this.Controls.AddRange(new Control[] {
-            _elementTree, _sessionInfo, controlsPanel
+            _elementTree, _sessionInfo, controlsPanel, _logTextBox
         });
 
         // Initialize timer
@@ -167,6 +224,7 @@ public class WebDriverNavigator : Form
 
     private async void StartSession_Click(object sender, EventArgs e)
     {
+        Log("Starting new session...");
         try
         {
             //var options = new OpenQA.Selenium.Chrome.ChromeOptions();
@@ -200,6 +258,7 @@ public class WebDriverNavigator : Form
         catch (Exception ex)
         {
             _sessionInfo.Text = $"Error: {ex.Message}";
+            Log($"Session start failed: {ex.Message}");
         }
     }
 
@@ -236,6 +295,7 @@ public class WebDriverNavigator : Form
 
         try
         {
+            Log($"Ending session: {reason}");
             _driver?.Quit();
             _sessionInfo.Text = $"Session {_sessionId} {reason}.";
             _elementTree.Nodes.Clear();
@@ -246,6 +306,7 @@ public class WebDriverNavigator : Form
         }
         catch (Exception ex)
         {
+            Log($"Failed to end session: {ex.Message}");
             Console.WriteLine($"Failed to end session: {ex.Message}");
         }
     }
@@ -320,7 +381,7 @@ public class WebDriverNavigator : Form
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show($"Error performing action: {ex.Message}");
+                        Log($"ERROR: Error performing action: {ex.Message}", Color.Red);
                     }
                 }
             };
@@ -370,7 +431,7 @@ public class WebDriverNavigator : Form
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Error sending Ctrl+O: {ex.Message}");
+            Log($"ERROR: Error sending Ctrl+O: {ex.Message}", Color.Red);
         }
     }
 
@@ -396,7 +457,7 @@ public class WebDriverNavigator : Form
         }
         catch(Exception ex)
         {
-            MessageBox.Show($"Error performing action: {ex.Message}");
+            Log($"ERROR: Error performing action: {ex.Message}", Color.Red);
         }
     }
 
@@ -422,7 +483,7 @@ public class WebDriverNavigator : Form
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Login failed: {ex.Message}");
+            Log($"ERROR: Login failed: {ex.Message}", Color.Red);
         }
     }
 
@@ -432,5 +493,19 @@ public class WebDriverNavigator : Form
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
         Application.Run(new WebDriverNavigator());
+    }
+
+    private void Log(string message, Color? color = null)
+    {
+        if (_logTextBox != null)
+        {
+            _logTextBox.SelectionStart = _logTextBox.TextLength;
+            if (color != null)
+            {
+                _logTextBox.SelectionColor = color.Value;
+            }
+            _logTextBox.AppendText($"{DateTime.Now:HH:mm:ss} - {message}{Environment.NewLine}");
+            _logTextBox.SelectionColor = _logTextBox.ForeColor;
+        }
     }
 }
