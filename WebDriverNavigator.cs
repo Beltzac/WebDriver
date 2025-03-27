@@ -123,8 +123,8 @@ public class WebDriverNavigator : Form
         _openBtn.Click += Open_Click;
 
         // Additional buttons (2 rows of 6)
-        var button2 = new Button { Text = "Button 2", Location = new Point(10, 50), Size = new Size(100, 30) };
-        button2.Click += (s, e) => { /* TODO: Implement */ };
+        var button2 = new Button { Text = "Conteiner Management", Location = new Point(10, 50), Size = new Size(100, 30) };
+        button2.Click += (s, e) => { OpenMenu("Management"); };
 
         var button3 = new Button { Text = "Button 3", Location = new Point(120, 50), Size = new Size(100, 30) };
         button3.Click += (s, e) => { /* TODO: Implement */ };
@@ -258,7 +258,7 @@ public class WebDriverNavigator : Form
 
             _timeoutDuration = (int)_timeoutInput.Value;
             ResetSessionTimer();
-            await BuildElementTree();
+            //await BuildElementTree();
         }
         catch (Exception ex)
         {
@@ -402,8 +402,8 @@ public class WebDriverNavigator : Form
 
     private async void RefreshElements_Click(object sender, EventArgs e)
     {
-        var win = _driver.WindowHandles;
-        _driver.SwitchTo().Window(win.First());
+        //var win = _driver.WindowHandles;
+        //_driver.SwitchTo().Window(win.First());
         await BuildElementTree();
         ResetSessionTimer();
         Log("Elements refreshed successfully", Color.Green);
@@ -411,35 +411,38 @@ public class WebDriverNavigator : Form
 
     private void Open_Click(object sender, EventArgs e)
     {
+        OpenMenu("Truck Transaction");
+    }
+
+    private void OpenMenu(string menu)
+    {
         try
         {
-            var win = _driver.WindowHandles;
-            _driver.SwitchTo().Window(win.First());
+            Log("Abrindo menu: " + menu);
 
-            //var gateBtn = _driver.FindElement(By.Name("Gate Processing"));
+            _driver.SwitchTo().ActiveElement().SendKeys(OpenQA.Selenium.Keys.Control + "o");
 
-            ////if (gateBtn.Displayed)
-            //gateBtn.Click();
+            new Actions(_driver)
+                .SendKeys(menu)
+                .SendKeys(OpenQA.Selenium.Keys.ArrowDown)
+                .SendKeys(OpenQA.Selenium.Keys.Enter)
+                .SendKeys(OpenQA.Selenium.Keys.Enter)
+                .SendKeys(OpenQA.Selenium.Keys.Enter)
+                .Perform();
 
-            if (_driver != null)
-            {
-                _driver.SwitchTo().ActiveElement().SendKeys(OpenQA.Selenium.Keys.Control + "o");
+            //Esperar ela abrir
+            Log("Aguardando menu abrir: " + menu);
 
-                new Actions(_driver)
-                    .SendKeys("Truck Transaction")
-                    .SendKeys(OpenQA.Selenium.Keys.ArrowDown)
-                    .SendKeys(OpenQA.Selenium.Keys.Enter)
-                    .SendKeys(OpenQA.Selenium.Keys.Enter)
-                    .SendKeys(OpenQA.Selenium.Keys.Enter)
-                    .Perform();
-           Log("Open operation completed successfully", Color.Green);
+            new WebDriverWait(_driver, TimeSpan.FromSeconds(10))
+                .Until(d => _driver.Title.ToUpper().Contains(menu.ToUpper()));
+
+            if (!_driver.Title.ToUpper().Contains(menu.ToUpper()))
+                throw new Exception($"Janela {_driver.Title} diferente da janela esperada {menu}");
+
+            Log("Oppened: " + _driver.Title);
 
 
-
-                //_driver.SwitchTo().ActiveElement().SendKeys(OpenQA.Selenium.Keys.Control + "o");
-            }
-
-           // var confirmBtn = _driver.FindElement(By.Name("Confirm"));
+            Log("Open operation completed successfully", Color.Green);
 
         }
         catch (Exception ex)
@@ -452,8 +455,8 @@ public class WebDriverNavigator : Form
     {
         try
         {
-            var win = _driver.WindowHandles;
-            _driver.SwitchTo().Window(win.First());
+            //var win = _driver.WindowHandles;
+            //_driver.SwitchTo().Window(win.First());
 
             var gateBtn = _driver.FindElement(By.Name("Gate Processing"));
 
@@ -490,7 +493,8 @@ public class WebDriverNavigator : Form
             // Wait for and interact with username field
             userNameField.WaitForElement(_driver);
             userNameField.Click();
-            userNameField.SendKeys("ahoy.abeltzac");
+            var username = "ahoy.abeltzac";
+            userNameField.SendKeys(username);
             Log("Entered username", Color.Blue);
 
             // Wait for and interact with password field
@@ -504,8 +508,20 @@ public class WebDriverNavigator : Form
             Log("Clicked OK button", Color.Blue);
 
             // Verify login success
+
+            // Esperar nova tela
             new WebDriverWait(_driver, TimeSpan.FromSeconds(10))
                 .Until(d => _driver.WindowHandles.Count > 0);
+
+            // Mudar para a nova tela
+            _driver.SwitchTo().Window(_driver.WindowHandles.First());
+
+            Log("Oppened: " + _driver.Title);
+
+            var janelaEsperada = "CTOS DIS";
+            if (_driver.Title != janelaEsperada)
+                throw new Exception($"Janela {_driver.Title} diferente da janela esperada {janelaEsperada}");
+
             Log("Login successful", Color.Green);
 
             //_driver.SwitchTo().Window("CTOS DIS");
