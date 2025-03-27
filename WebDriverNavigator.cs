@@ -236,7 +236,7 @@ public class WebDriverNavigator : Form
             _driver = new WindowsDriver(new Uri("http://192.168.56.56:4723/"), opt);
             //_driver = new RemoteWebDriver(new Uri("http://localhost:5000"), FlaUIDriverOptions.ForApp("calc.exe"));
 
-            _driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(2);
+            //_driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(2);
 
             // _driver.FindElement(By.Id("txtUserName")).SendKeys("ahoy.abeltzac");
             // _driver.FindElement(By.Id("txtPassword")).SendKeys("Hunt93cexx33");
@@ -330,13 +330,16 @@ public class WebDriverNavigator : Form
                     var name = element.GetDomAttribute("Name");
                     var tagName = element.TagName;
 
-                    var node = new TreeNode($"{name ?? "Unnamed"} ({tagName})")
+                    var node = new TreeNode($"{name ?? "Unnamed"} ({tagName}) - {element.GetAttribute("Value") ?? element.Text ?? "No value"}")
                     {
                         Tag = element,
                         ToolTipText = $"ID: {element}\n" +
+                                      $"Value: {element.GetAttribute("Value") ?? element.Text ?? "None"}\n" +
                                       $"Position: ({location.X}, {location.Y})\n" +
                                       $"Size: {size.Width}x{size.Height}\n" +
-                                      $"Enabled: {enabled}"
+                                      $"Enabled: {enabled}\n" +
+                                      $"Visible: {element.Displayed}\n" +
+                                      $"Selected: {element.Selected}"
                     };
 
                     // Add action buttons as child nodes
@@ -466,11 +469,11 @@ public class WebDriverNavigator : Form
 
     private void Login_Click(object sender, EventArgs e)
     {
-        var win = _driver.WindowHandles;
-        _driver.SwitchTo().Window(win.First());
-
         try
         {
+            var win = _driver.WindowHandles;
+            _driver.SwitchTo().Window(win.First());
+    
             _driver.FindElement(By.Id("txtUserName")).Click();
             //_driver.FindElement(By.Name("Login")).Click();
 
