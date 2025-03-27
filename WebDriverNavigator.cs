@@ -25,6 +25,7 @@ public class WebDriverNavigator : Form
     private Button _truckBtn;
     private Button _refreshElementsBtn;
     private Button _openBtn;
+    private Button _loginBtn;
     private NumericUpDown _timeoutInput;
     private Label _timerDisplay;
     private Label _sessionInfo;
@@ -103,8 +104,16 @@ public class WebDriverNavigator : Form
             AutoSize = true
         };
 
+        _loginBtn = new Button
+        {
+            Text = "Login",
+            Location = new Point(300, 20),
+            AutoSize = true
+        };
+        _loginBtn.Click += Login_Click;
+
         controlsPanel.Controls.AddRange(new Control[] {
-            _startSessionBtn, _refreshElementsBtn, timeoutLabel, _timeoutInput, _timerDisplay, _truckBtn, _openBtn
+            _startSessionBtn, _refreshElementsBtn, _loginBtn, timeoutLabel, _timeoutInput, _timerDisplay, _truckBtn, _openBtn
         });
 
         // Session info
@@ -163,21 +172,19 @@ public class WebDriverNavigator : Form
             //var options = new OpenQA.Selenium.Chrome.ChromeOptions();
             //_driver = new OpenQA.Selenium. Chrome.ChromeDriver(options);
 
-            var opt = FlaUIDriverOptions.ForApp("C:\\Users\\Beltzac\\Downloads\\CTOSTEST\\CTOS1TEST\\DIS\\CM.CTOS.WinUIAdmin.exe");
-            _driver = new WindowsDriver(new Uri("http://localhost:5000"), opt);
+            //var opt = FlaUIDriverOptions.ForApp("C:\\Users\\Beltzac\\Downloads\\CTOSTEST\\CTOS1TEST\\DIS\\CM.CTOS.WinUIAdmin.exe");
+            var opt = FlaUIDriverOptions.ForApp("C:\\Users\\Beltzac\\Desktop\\DIS\\CM.CTOS.WinUIAdmin.exe");
+            //_driver = new WindowsDriver(new Uri("http://localhost:5000"), opt);
+            _driver = new WindowsDriver(new Uri("http://192.168.56.56:4723/"), opt);
             //_driver = new RemoteWebDriver(new Uri("http://localhost:5000"), FlaUIDriverOptions.ForApp("calc.exe"));
 
             _driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(2);
 
-            _driver.FindElement(By.Id("txtUserName")).SendKeys("ahoy.abeltzac");
-            _driver.FindElement(By.Id("txtPassword")).SendKeys("Hunt93cexx33");
-            _driver.FindElement(By.Id("btnOK")).Click();
+            // _driver.FindElement(By.Id("txtUserName")).SendKeys("ahoy.abeltzac");
+            // _driver.FindElement(By.Id("txtPassword")).SendKeys("Hunt93cexx33");
+            // _driver.FindElement(By.Id("btnOK")).Click();
 
-            WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(5));
-            wait.Until(d => _driver.WindowHandles.Count > 0);
 
-            //_driver.SwitchTo().Window("CTOS DIS");
-            _driver.SwitchTo().DefaultContent();
 
             _sessionId = ((OpenQA.Selenium.Remote.RemoteWebDriver)_driver).SessionId.ToString();
             _sessionActive = true;
@@ -390,6 +397,32 @@ public class WebDriverNavigator : Form
         catch(Exception ex)
         {
             MessageBox.Show($"Error performing action: {ex.Message}");
+        }
+    }
+
+    private void Login_Click(object sender, EventArgs e)
+    {
+        var win = _driver.WindowHandles;
+        _driver.SwitchTo().Window(win.First());
+
+        try
+        {
+            _driver.FindElement(By.Id("txtUserName")).Click();
+            //_driver.FindElement(By.Name("Login")).Click();
+
+            _driver.FindElement(By.Id("txtUserName")).SendKeys("ahoy.abeltzac");
+            _driver.FindElement(By.Id("txtPassword")).SendKeys("Hunt93cexx33");
+            _driver.FindElement(By.Id("btnOK")).Click();
+
+            WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(5));
+            wait.Until(d => _driver.WindowHandles.Count > 0);
+
+            //_driver.SwitchTo().Window("CTOS DIS");
+            // _driver.SwitchTo().DefaultContent();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Login failed: {ex.Message}");
         }
     }
 
