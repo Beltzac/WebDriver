@@ -45,6 +45,8 @@ public class WebDriverNavigator : Form
 
     private void InitializeComponents()
     {
+        Utils.WebDriverExtensions.LogAction = (message, color) => Log(message, color);
+
         this.Text = "WebDriver GUI Navigator";
         this.Size = new Size(1000, 800);
 
@@ -486,18 +488,18 @@ public class WebDriverNavigator : Form
             var okButton = _driver.FindElement(By.Id("btnOK"), 10);
 
             // Wait for and interact with username field
-            WaitForElement(userNameField);
+            userNameField.WaitForElement(_driver);
             userNameField.Click();
             userNameField.SendKeys("ahoy.abeltzac");
             Log("Entered username", Color.Blue);
 
             // Wait for and interact with password field
-            WaitForElement(passwordField);
+            passwordField.WaitForElement(_driver);
             passwordField.SendKeys("Hunt93cexx33");
             Log("Entered password", Color.Blue);
 
             // Wait for and click OK button
-            WaitForElement(okButton);
+            okButton.WaitForElement(_driver);
             okButton.Click();
             Log("Clicked OK button", Color.Blue);
 
@@ -535,18 +537,5 @@ public class WebDriverNavigator : Form
             _logTextBox.AppendText($"{DateTime.Now:HH:mm:ss} - {message}{Environment.NewLine}");
             _logTextBox.SelectionColor = _logTextBox.ForeColor;
         }
-    }
-
-    private void WaitForElement(IWebElement element, int timeoutSeconds = 10)
-    {
-        var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(timeoutSeconds));
-        wait.Until(d => {
-            try {
-                return element.Displayed && element.Enabled;
-            }
-            catch {
-                return false;
-            }
-        });
     }
 }
