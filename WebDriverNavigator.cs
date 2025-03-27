@@ -552,6 +552,7 @@ public class WebDriverNavigator : Form
             }
             _logTextBox.AppendText($"{DateTime.Now:HH:mm:ss} - {message}{Environment.NewLine}");
             _logTextBox.SelectionColor = _logTextBox.ForeColor;
+            _logTextBox.ScrollToCaret();
         }
     }
 }
