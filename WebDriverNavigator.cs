@@ -2,6 +2,7 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Appium;
 using OpenQA.Selenium.Appium.Enums;
 using OpenQA.Selenium.Appium.Windows;
+using OpenQA.Selenium.Interactions;
 using OpenQA.Selenium.Remote;
 using OpenQA.Selenium.Support.UI;
 using System;
@@ -23,6 +24,7 @@ public class WebDriverNavigator : Form
     private Button _startSessionBtn;
     private Button _truckBtn;
     private Button _refreshElementsBtn;
+    private Button _openBtn;
     private NumericUpDown _timeoutInput;
     private Label _timerDisplay;
     private Label _sessionInfo;
@@ -72,6 +74,15 @@ public class WebDriverNavigator : Form
         };
         _truckBtn.Click += gate_Click;
 
+        _openBtn = new Button
+        {
+            Text = "Open (Ctrl+O)",
+            Location = new Point(650, 20),
+            AutoSize = true,
+            //Enabled = false
+        };
+        _openBtn.Click += Open_Click;
+
         var timeoutLabel = new Label
         {
             Text = "Timeout (s):",
@@ -93,7 +104,7 @@ public class WebDriverNavigator : Form
         };
 
         controlsPanel.Controls.AddRange(new Control[] {
-            _startSessionBtn, _refreshElementsBtn, timeoutLabel, _timeoutInput, _timerDisplay, _truckBtn
+            _startSessionBtn, _refreshElementsBtn, timeoutLabel, _timeoutInput, _timerDisplay, _truckBtn, _openBtn
         });
 
         // Session info
@@ -319,6 +330,41 @@ public class WebDriverNavigator : Form
         _driver.SwitchTo().Window(win.First());
         await BuildElementTree();
         ResetSessionTimer();
+    }
+
+    private void Open_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            var gateBtn = _driver.FindElement(By.Name("Gate Processing"));
+
+            //if (gateBtn.Displayed)
+            gateBtn.Click();
+
+            if (_driver != null)
+            {
+                _driver.SwitchTo().ActiveElement().SendKeys(OpenQA.Selenium.Keys.Control + "o");
+
+                new Actions(_driver)
+                    .SendKeys("Truck Transaction")
+                    .SendKeys(OpenQA.Selenium.Keys.ArrowDown)
+                    .SendKeys(OpenQA.Selenium.Keys.Enter)
+                    .SendKeys(OpenQA.Selenium.Keys.Enter)
+                    .SendKeys(OpenQA.Selenium.Keys.Enter)
+                    .Perform();
+
+
+
+                //_driver.SwitchTo().ActiveElement().SendKeys(OpenQA.Selenium.Keys.Control + "o");
+            }
+
+           // var confirmBtn = _driver.FindElement(By.Name("Confirm"));
+
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Error sending Ctrl+O: {ex.Message}");
+        }
     }
 
     private async void gate_Click(object sender, EventArgs e)
