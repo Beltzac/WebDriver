@@ -40,7 +40,7 @@ public class WebDriverNavigator : Form
     {
         Utils.WebDriverExtensions.LogAction = (message, color) => Log(message, color);
 
-        this.Text = "POC - Automação CTOS - Selenium + FlaUi WebDriver";
+        this.Text = "POC - Automação CTOS - Selenium + FlaUI WebDriver";
         this.Size = new Size(1000, 800);
 
         // Main controls panel
@@ -66,6 +66,7 @@ public class WebDriverNavigator : Form
             Location = new Point(140, 10),
             Size = new Size(120, 30)
         };
+
         _refreshElementsBtn.Click += RefreshElements_Click;
         // Username/Password Inputs
         var usernameLabel = new Label { Text = "Usuário:", Location = new Point(760, 15), AutoSize = true };
@@ -80,34 +81,33 @@ public class WebDriverNavigator : Form
         // Action buttons row 1
         _loginBtn = new Button
         {
-            Text = "Entrar",
-            Location = new Point(490, 10),
+            Text = "Login",
+            Location = new Point(450, 10),
             Size = new Size(80, 30)
         };
         _loginBtn.Click += Login_Click;
 
         _truckBtn = new Button
         {
-            Text = "Caminhão",
-            Location = new Point(580, 10),
-            Size = new Size(80, 30)
+            Text = "Truck Transaction",
+            Location = new Point(540, 10),
+            Size = new Size(120, 30)
         };
         _truckBtn.Click += gate_Click;
 
         _openBtn = new Button
         {
-            Text = "Abrir",
-            Location = new Point(670, 10),
-            Size = new Size(80, 30)
+            Text = "Conteiner Size",
+            Location = new Point(300, 10),
+            Size = new Size(140, 30)
         };
         _openBtn.Click += Open_Click;
 
         // Additional buttons (2 rows of 6)
-        var button2 = new Button { Text = "Gerenciamento Contêiner", Location = new Point(10, 50), Size = new Size(100, 30) };
-        button2.Click += (s, e) => { OpenMenu("Management"); };
+        var button2 = new Button { Text = "Conteiner Management", Location = new Point(450, 50), Size = new Size(200, 30) };
+        button2.Click += (s, e) => { OpenMenu("Management", "Management[CI002]"); };
 
 
-        // Log panel
         // Log panel
         _logTextBox = new RichTextBox
         {
@@ -172,15 +172,8 @@ public class WebDriverNavigator : Form
             var opt = FlaUIDriverOptions.ForApp("C:\\Users\\Beltzac\\Desktop\\DIS\\CM.CTOS.WinUIAdmin.exe");
             _driver = new WindowsDriver(new Uri("http://192.168.56.56:4723/"), opt);
 
-
-
-
-
             _sessionActive = true;
-
             _sessionInfo.Text = $"ID da Sessão: {_sessionId}";
-            _startSessionBtn.Enabled = false;
-            _refreshElementsBtn.Enabled = true;
             Log("Sessão iniciada com sucesso", Color.Green);
 
         }
@@ -192,13 +185,18 @@ public class WebDriverNavigator : Form
     }
 
 
-    private async Task BuildElementTree()
+    private void BuildElementTree(string xpath)
     {
 
         try
         {
             _elementTree.Nodes.Clear();
-            var elements = _driver.FindElements(By.XPath("//*"));
+
+            Log("Construindo árvore de elementos com XPath: " + xpath);
+
+            var elements = _driver.FindElements(By.XPath(xpath));
+
+            Log($"Encontrado {elements.Count} elementos");
 
             foreach (var element in elements)
             {
@@ -208,26 +206,21 @@ public class WebDriverNavigator : Form
                     var size = element.Size;
                     var enabled = element.Enabled;
                     var name = element.GetDomAttribute("Name");
-                    var tagName = element.TagName;
+                    var tipo = element.GetDomAttribute("ControlType");
 
-                    var node = new TreeNode($"{name ?? "Sem nome"} ({tagName}) - {element.GetAttribute("Value") ?? element.Text ?? "Sem valor"}")
+                    var node = new TreeNode($"{name ?? "Sem nome"} ({tipo}) - {element.GetAttribute("Value") ?? element.Text ?? "Sem valor"}")
                     {
                         Tag = element,
-                        ToolTipText = $"ID: {element}\n" +
-                                      $"Valor: {element.GetAttribute("Value") ?? element.Text ?? "Nenhum"}\n" +
-                                      $"Posição: ({location.X}, {location.Y})\n" +
-                                      $"Tamanho: {size.Width}x{size.Height}\n" +
-                                      $"Habilitado: {enabled}\n" +
-                                      $"Visível: {element.Displayed}\n" +
-                                      $"Selecionado: {element.Selected}"
                     };
 
                     // Add action buttons as child nodes
                     var clickNode = new TreeNode("Clicar") { Tag = new { Action = "click", Element = element } };
                     var setValueNode = new TreeNode("Definir Valor") { Tag = new { Action = "setValue", Element = element } };
+                    var detailsNode = new TreeNode("Detalhes") { Tag = new { Action = "showDetails", Element = element, Loaded = false } }; // Add details node
 
                     node.Nodes.Add(clickNode);
                     node.Nodes.Add(setValueNode);
+                    node.Nodes.Add(detailsNode); // Add details node to parent
 
                     _elementTree.Nodes.Add(node);
                 }
@@ -259,12 +252,54 @@ public class WebDriverNavigator : Form
                             if (!string.IsNullOrEmpty(value))
                             {
                                 element.SendKeys(value);
+                                e.Node.BackColor = Color.LightYellow; // Indicate value was set
+                            }
+                        }
+                        else if (action == "showDetails" && !(bool)actionInfo.Loaded) // Check if details need loading
+                        {
+                            e.Node.Nodes.Clear(); // Clear placeholder if any
+                            try
+                            {
+                                //https://github.com/FlaUI/FlaUI.WebDriver
+                                //https://learn.microsoft.com/en-us/windows/win32/winauto/uiauto-automation-element-propids
+                                // Fetch details on demand
+                                var location = element.Location;
+                                var size = element.Size;
+                                var enabled = element.Enabled;
+                                var displayed = element.Displayed;
+                                var selected = element.Selected;
+                                var tipo = element.TagName;
+                                var valueAttr = element.GetAttribute("Value");
+                                var name = element.GetDomAttribute("Name");
+                                var tipo2 = element.GetDomAttribute("ControlType");
+                                var text = element.Text;
+
+                                e.Node.Nodes.Add(new TreeNode($"ID: {element}"));
+                                e.Node.Nodes.Add(new TreeNode($"Name: {name}"));
+                                e.Node.Nodes.Add(new TreeNode($"Valor: {valueAttr ?? text ?? "Nenhum"}"));
+                                e.Node.Nodes.Add(new TreeNode($"Tipo: {tipo}"));
+                                e.Node.Nodes.Add(new TreeNode($"Tipo 2: {tipo2}"));
+                                e.Node.Nodes.Add(new TreeNode($"Posição: ({location.X}, {location.Y})"));
+                                e.Node.Nodes.Add(new TreeNode($"Tamanho: {size.Width}x{size.Height}"));
+                                e.Node.Nodes.Add(new TreeNode($"Habilitado: {enabled}"));
+                                e.Node.Nodes.Add(new TreeNode($"Visível: {displayed}"));
+                                e.Node.Nodes.Add(new TreeNode($"Selecionado: {selected}"));
+
+                                // Mark as loaded
+                                e.Node.Tag = new { Action = "showDetails", Element = element, Loaded = true };
+                                e.Node.Expand(); // Expand to show details
+                            }
+                            catch (Exception detailEx)
+                            {
+                                e.Node.Nodes.Add(new TreeNode($"Erro ao carregar detalhes: {detailEx.Message}"));
+                                Log($"ERRO: Falha ao obter detalhes do elemento: {detailEx.Message}", Color.Red);
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log($"ERRO: Erro ao executar ação: {ex.Message}", Color.Red);
+                        Log($"ERRO: Erro ao executar ação '{action}': {ex.Message}", Color.Red);
+                        e.Node.BackColor = Color.LightCoral; // Indicate error
                     }
                 }
             };
@@ -277,43 +312,50 @@ public class WebDriverNavigator : Form
 
     private async void RefreshElements_Click(object sender, EventArgs e)
     {
-        await BuildElementTree();
+        BuildElementTree("//*");
         Log("Elementos atualizados com sucesso", Color.Green);
     }
 
     private void Open_Click(object sender, EventArgs e)
     {
-        OpenMenu("Conteiner Size", "Size");
+        OpenMenu("Size", "Size[RM022]"); //Conteiner Size
+        //BuildElementTree("//*[@Name='Row 1']"); // funciona
+        //BuildElementTree("//*[@Name='Data Panel']/*"); // funciona
+        //BuildElementTree("//*[@Name='Data Panel']/*[@Value='40']"); // nao funciona
+        //BuildElementTree("//*[@Value.Value='40']"); // nao funciona
+        //BuildElementTree("//*[Value.Value='40']"); // nao funciona
+        //BuildElementTree("//*[@ControlType='ListItem']"); // nao funciona
+        //BuildElementTree("//*[contains(@ControlType,'ListItem')]"); // nao funciona
+        //BuildElementTree("//*[contains(@Name,'Row')]"); // Nao funciona
+
+
     }
 
-    private void OpenMenu(string menu, string titulo = null)
+    private void OpenMenu(string textoPesquisa, string nomeJanela)
     {
         try
         {
-            titulo ??= menu;
-
-            Log("Abrindo menu: " + menu);
+            Log("Abrindo menu: " + textoPesquisa);
 
             _driver.SwitchTo().ActiveElement().SendKeys(OpenQA.Selenium.Keys.Control + "o");
 
             new Actions(_driver)
-                .SendKeys(menu)
+                .SendKeys(textoPesquisa)
                 .SendKeys(OpenQA.Selenium.Keys.ArrowDown)
                 .SendKeys(OpenQA.Selenium.Keys.Enter)
                 .SendKeys(OpenQA.Selenium.Keys.Enter)
                 .SendKeys(OpenQA.Selenium.Keys.Enter)
                 .Perform();
 
-            Log("Aguardando menu abrir: " + menu);
+            Log("Aguardando menu abrir: " + textoPesquisa);
 
             new WebDriverWait(_driver, TimeSpan.FromSeconds(10))
-                .Until(d => _driver.Title.ToUpper().Contains(menu.ToUpper()));
+                .Until(d => _driver.Title.ToUpper().Contains(textoPesquisa.ToUpper()));
 
-            if (!_driver.Title.ToUpper().Contains(menu.ToUpper()))
-                throw new Exception($"Janela '{_driver.Title}' diferente da janela esperada '{titulo}'");
+            if (!_driver.Title.ToUpper().Contains(textoPesquisa.ToUpper()))
+                throw new Exception($"Janela '{_driver.Title}' diferente da janela esperada '{nomeJanela}'");
 
             Log("Aberta: " + _driver.Title);
-
 
             Log("Operação Abrir concluída com sucesso", Color.Green);
 
@@ -326,7 +368,7 @@ public class WebDriverNavigator : Form
 
     private async void gate_Click(object sender, EventArgs e)
     {
-        OpenMenu("Truck Transaction");
+        OpenMenu("Truck Transaction", "Truck Transaction[ER025]");
     }
 
     private void Login_Click(object sender, EventArgs e)
