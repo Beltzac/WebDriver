@@ -21,6 +21,8 @@ public class WebDriverNavigator : Form
     private RichTextBox _logTextBox;
     private TreeView _elementTree;
     private Label _sessionInfo;
+    private TextBox _usernameInput;
+    private TextBox _passwordInput;
 
     // Buttons
     private Button _startSessionBtn;
@@ -65,6 +67,13 @@ public class WebDriverNavigator : Form
             Size = new Size(120, 30)
         };
         _refreshElementsBtn.Click += RefreshElements_Click;
+        // Username/Password Inputs
+        var usernameLabel = new Label { Text = "Username:", Location = new Point(760, 15), AutoSize = true };
+        _usernameInput = new TextBox { Location = new Point(830, 10), Width = 150 };
+
+        var passwordLabel = new Label { Text = "Password:", Location = new Point(760, 55), AutoSize = true };
+        _passwordInput = new TextBox { Location = new Point(830, 50), Width = 150, UseSystemPasswordChar = true };
+
 
 
         // Action buttons
@@ -103,7 +112,7 @@ public class WebDriverNavigator : Form
         _logTextBox = new RichTextBox
         {
             Dock = DockStyle.Bottom,
-            Height = 150,
+            Height = 300,
             Multiline = true,
             ScrollBars = RichTextBoxScrollBars.Vertical,
             ReadOnly = true
@@ -129,7 +138,8 @@ public class WebDriverNavigator : Form
         // Add controls to panels
         controlsPanel.Controls.AddRange(new Control[] {
             _startSessionBtn, _refreshElementsBtn, _loginBtn, _truckBtn, _openBtn,
-            button2
+            button2,
+            usernameLabel, _usernameInput, passwordLabel, _passwordInput
         });
 
         this.Controls.AddRange(new Control[] {
@@ -334,13 +344,12 @@ public class WebDriverNavigator : Form
             // Wait for and interact with username field
             userNameField.WaitForElement(_driver);
             userNameField.Click();
-            var username = "ahoy.abeltzac";
-            userNameField.SendKeys(username);
+            userNameField.SendKeys(_usernameInput.Text);
             Log("Entered username", Color.Blue);
 
             // Wait for and interact with password field
             passwordField.WaitForElement(_driver);
-            passwordField.SendKeys("Hunt93cexx33");
+            passwordField.SendKeys(_passwordInput.Text);
             Log("Entered password", Color.Blue);
 
             // Wait for and click OK button
