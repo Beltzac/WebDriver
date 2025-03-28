@@ -40,7 +40,7 @@ public class WebDriverNavigator : Form
     {
         Utils.WebDriverExtensions.LogAction = (message, color) => Log(message, color);
 
-        this.Text = "WebDriver GUI Navigator";
+        this.Text = "POC - Automação CTOS - Selenium + FlaUi WebDriver";
         this.Size = new Size(1000, 800);
 
         // Main controls panel
@@ -54,7 +54,7 @@ public class WebDriverNavigator : Form
         // Session controls
         _startSessionBtn = new Button
         {
-            Text = "Start Session",
+            Text = "Iniciar Sessão",
             Location = new Point(10, 10),
             Size = new Size(120, 30)
         };
@@ -62,16 +62,16 @@ public class WebDriverNavigator : Form
 
         _refreshElementsBtn = new Button
         {
-            Text = "Refresh Elements",
+            Text = "Atualizar Elementos",
             Location = new Point(140, 10),
             Size = new Size(120, 30)
         };
         _refreshElementsBtn.Click += RefreshElements_Click;
         // Username/Password Inputs
-        var usernameLabel = new Label { Text = "Username:", Location = new Point(760, 15), AutoSize = true };
+        var usernameLabel = new Label { Text = "Usuário:", Location = new Point(760, 15), AutoSize = true };
         _usernameInput = new TextBox { Location = new Point(830, 10), Width = 150 };
 
-        var passwordLabel = new Label { Text = "Password:", Location = new Point(760, 55), AutoSize = true };
+        var passwordLabel = new Label { Text = "Senha:", Location = new Point(760, 55), AutoSize = true };
         _passwordInput = new TextBox { Location = new Point(830, 50), Width = 150, UseSystemPasswordChar = true };
 
 
@@ -80,7 +80,7 @@ public class WebDriverNavigator : Form
         // Action buttons row 1
         _loginBtn = new Button
         {
-            Text = "Login",
+            Text = "Entrar",
             Location = new Point(490, 10),
             Size = new Size(80, 30)
         };
@@ -88,7 +88,7 @@ public class WebDriverNavigator : Form
 
         _truckBtn = new Button
         {
-            Text = "Truck",
+            Text = "Caminhão",
             Location = new Point(580, 10),
             Size = new Size(80, 30)
         };
@@ -96,14 +96,14 @@ public class WebDriverNavigator : Form
 
         _openBtn = new Button
         {
-            Text = "Open",
+            Text = "Abrir",
             Location = new Point(670, 10),
             Size = new Size(80, 30)
         };
         _openBtn.Click += Open_Click;
 
         // Additional buttons (2 rows of 6)
-        var button2 = new Button { Text = "Conteiner Management", Location = new Point(10, 50), Size = new Size(100, 30) };
+        var button2 = new Button { Text = "Gerenciamento Contêiner", Location = new Point(10, 50), Size = new Size(100, 30) };
         button2.Click += (s, e) => { OpenMenu("Management"); };
 
 
@@ -121,7 +121,7 @@ public class WebDriverNavigator : Form
         _sessionInfo = new Label
         {
             Dock = DockStyle.Top,
-            Text = "Session not started",
+            Text = "Sessão não iniciada",
             Padding = new Padding(10),
             Height = 40,
             BackColor = SystemColors.ControlLight
@@ -166,7 +166,7 @@ public class WebDriverNavigator : Form
 
     private async void StartSession_Click(object sender, EventArgs e)
     {
-        Log("Starting new session...");
+        Log("Iniciando nova sessão...");
         try
         {
             var opt = FlaUIDriverOptions.ForApp("C:\\Users\\Beltzac\\Desktop\\DIS\\CM.CTOS.WinUIAdmin.exe");
@@ -178,16 +178,16 @@ public class WebDriverNavigator : Form
 
             _sessionActive = true;
 
-            _sessionInfo.Text = $"Session ID: {_sessionId}";
+            _sessionInfo.Text = $"ID da Sessão: {_sessionId}";
             _startSessionBtn.Enabled = false;
             _refreshElementsBtn.Enabled = true;
-            Log("Session started successfully", Color.Green);
+            Log("Sessão iniciada com sucesso", Color.Green);
 
         }
         catch (Exception ex)
         {
-            _sessionInfo.Text = $"Error: {ex.Message}";
-            Log($"Session start failed: {ex.Message}");
+            _sessionInfo.Text = $"Erro: {ex.Message}";
+            Log($"Falha ao iniciar sessão: {ex.Message}");
         }
     }
 
@@ -210,21 +210,21 @@ public class WebDriverNavigator : Form
                     var name = element.GetDomAttribute("Name");
                     var tagName = element.TagName;
 
-                    var node = new TreeNode($"{name ?? "Unnamed"} ({tagName}) - {element.GetAttribute("Value") ?? element.Text ?? "No value"}")
+                    var node = new TreeNode($"{name ?? "Sem nome"} ({tagName}) - {element.GetAttribute("Value") ?? element.Text ?? "Sem valor"}")
                     {
                         Tag = element,
                         ToolTipText = $"ID: {element}\n" +
-                                      $"Value: {element.GetAttribute("Value") ?? element.Text ?? "None"}\n" +
-                                      $"Position: ({location.X}, {location.Y})\n" +
-                                      $"Size: {size.Width}x{size.Height}\n" +
-                                      $"Enabled: {enabled}\n" +
-                                      $"Visible: {element.Displayed}\n" +
-                                      $"Selected: {element.Selected}"
+                                      $"Valor: {element.GetAttribute("Value") ?? element.Text ?? "Nenhum"}\n" +
+                                      $"Posição: ({location.X}, {location.Y})\n" +
+                                      $"Tamanho: {size.Width}x{size.Height}\n" +
+                                      $"Habilitado: {enabled}\n" +
+                                      $"Visível: {element.Displayed}\n" +
+                                      $"Selecionado: {element.Selected}"
                     };
 
                     // Add action buttons as child nodes
-                    var clickNode = new TreeNode("Click") { Tag = new { Action = "click", Element = element } };
-                    var setValueNode = new TreeNode("Set Value") { Tag = new { Action = "setValue", Element = element } };
+                    var clickNode = new TreeNode("Clicar") { Tag = new { Action = "click", Element = element } };
+                    var setValueNode = new TreeNode("Definir Valor") { Tag = new { Action = "setValue", Element = element } };
 
                     node.Nodes.Add(clickNode);
                     node.Nodes.Add(setValueNode);
@@ -255,7 +255,7 @@ public class WebDriverNavigator : Form
                         }
                         else if (action == "setValue")
                         {
-                            var value = Microsoft.VisualBasic.Interaction.InputBox("Enter value:", "Set Value", "");
+                            var value = Microsoft.VisualBasic.Interaction.InputBox("Digite o valor:", "Definir Valor", "");
                             if (!string.IsNullOrEmpty(value))
                             {
                                 element.SendKeys(value);
@@ -264,21 +264,21 @@ public class WebDriverNavigator : Form
                     }
                     catch (Exception ex)
                     {
-                        Log($"ERROR: Error performing action: {ex.Message}", Color.Red);
+                        Log($"ERRO: Erro ao executar ação: {ex.Message}", Color.Red);
                     }
                 }
             };
         }
         catch (Exception ex)
         {
-            _elementTree.Nodes.Add(new TreeNode($"Error loading elements: {ex.Message}"));
+            _elementTree.Nodes.Add(new TreeNode($"Erro ao carregar elementos: {ex.Message}"));
         }
     }
 
     private async void RefreshElements_Click(object sender, EventArgs e)
     {
         await BuildElementTree();
-        Log("Elements refreshed successfully", Color.Green);
+        Log("Elementos atualizados com sucesso", Color.Green);
     }
 
     private void Open_Click(object sender, EventArgs e)
@@ -310,23 +310,23 @@ public class WebDriverNavigator : Form
                 .Until(d => _driver.Title.ToUpper().Contains(menu.ToUpper()));
 
             if (!_driver.Title.ToUpper().Contains(menu.ToUpper()))
-                throw new Exception($"Janela {_driver.Title} diferente da janela esperada {titulo}");
+                throw new Exception($"Janela '{_driver.Title}' diferente da janela esperada '{titulo}'");
 
-            Log("Oppened: " + _driver.Title);
+            Log("Aberta: " + _driver.Title);
 
 
-            Log("Open operation completed successfully", Color.Green);
+            Log("Operação Abrir concluída com sucesso", Color.Green);
 
         }
         catch (Exception ex)
         {
-            Log($"ERROR: Error sending Ctrl+O: {ex.Message}", Color.Red);
+            Log($"ERRO: Erro ao enviar Ctrl+O: {ex.Message}", Color.Red);
         }
     }
 
     private async void gate_Click(object sender, EventArgs e)
     {
-        OpenMenu("Truck Transaction");
+        OpenMenu("Transação Caminhão");
     }
 
     private void Login_Click(object sender, EventArgs e)
@@ -345,19 +345,19 @@ public class WebDriverNavigator : Form
             userNameField.WaitForElement(_driver);
             userNameField.Click();
             userNameField.SendKeys(_usernameInput.Text);
-            Log("Entered username", Color.Blue);
+            Log("Usuário inserido", Color.Blue);
 
             // Wait for and interact with password field
             passwordField.WaitForElement(_driver);
             passwordField.SendKeys(_passwordInput.Text);
-            Log("Entered password", Color.Blue);
+            Log("Senha inserida", Color.Blue);
 
             // Wait for and click OK button
             okButton.WaitForElement(_driver);
             okButton.Click();
-            Log("Clicked OK button", Color.Blue);
+            Log("Botão OK clicado", Color.Blue);
 
-            // Verify login success
+            // Verifica sucesso do login
 
             // Esperar nova tela
             new WebDriverWait(_driver, TimeSpan.FromSeconds(10))
@@ -366,18 +366,18 @@ public class WebDriverNavigator : Form
             // Mudar para a nova tela
             _driver.SwitchTo().Window(_driver.WindowHandles.First());
 
-            Log("Oppened: " + _driver.Title);
+            Log("Aberta: " + _driver.Title);
 
             var janelaEsperada = "CTOS DIS";
             if (_driver.Title != janelaEsperada)
-                throw new Exception($"Janela {_driver.Title} diferente da janela esperada {janelaEsperada}");
+                throw new Exception($"Janela '{_driver.Title}' diferente da janela esperada '{janelaEsperada}'");
 
-            Log("Login successful", Color.Green);
+            Log("Login realizado com sucesso", Color.Green);
 
         }
         catch (Exception ex)
         {
-            Log($"ERROR: Login failed: {ex.Message}", Color.Red);
+            Log($"ERRO: Falha no login: {ex.Message}", Color.Red);
         }
     }
 
