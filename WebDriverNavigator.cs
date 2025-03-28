@@ -326,7 +326,7 @@ public class WebDriverNavigator : Form
 
     private async void gate_Click(object sender, EventArgs e)
     {
-        OpenMenu("Transação Caminhão");
+        OpenMenu("Truck Transaction");
     }
 
     private void Login_Click(object sender, EventArgs e)
