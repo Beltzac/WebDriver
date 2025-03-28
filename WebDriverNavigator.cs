@@ -1,16 +1,11 @@
 using OpenQA.Selenium;
 using OpenQA.Selenium.Appium;
-using OpenQA.Selenium.Appium.Enums;
 using OpenQA.Selenium.Appium.Windows;
 using OpenQA.Selenium.Interactions;
-using OpenQA.Selenium.Remote;
 using OpenQA.Selenium.Support.UI;
-using OpenQA.Selenium.Support.Extensions;
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Utils;
@@ -411,13 +406,15 @@ public class WebDriverNavigator : Form
 
     private void Open_Click(object sender, EventArgs e)
     {
-        OpenMenu("Truck Transaction");
+        OpenMenu("Conteiner Size", "Size");
     }
 
-    private void OpenMenu(string menu)
+    private void OpenMenu(string menu, string titulo = null)
     {
         try
         {
+            titulo ??= menu;
+
             Log("Abrindo menu: " + menu);
 
             _driver.SwitchTo().ActiveElement().SendKeys(OpenQA.Selenium.Keys.Control + "o");
@@ -437,7 +434,7 @@ public class WebDriverNavigator : Form
                 .Until(d => _driver.Title.ToUpper().Contains(menu.ToUpper()));
 
             if (!_driver.Title.ToUpper().Contains(menu.ToUpper()))
-                throw new Exception($"Janela {_driver.Title} diferente da janela esperada {menu}");
+                throw new Exception($"Janela {_driver.Title} diferente da janela esperada {titulo}");
 
             Log("Oppened: " + _driver.Title);
 
@@ -453,29 +450,7 @@ public class WebDriverNavigator : Form
 
     private async void gate_Click(object sender, EventArgs e)
     {
-        try
-        {
-            //var win = _driver.WindowHandles;
-            //_driver.SwitchTo().Window(win.First());
-
-            var gateBtn = _driver.FindElement(By.Name("Gate Processing"));
-
-            //if (gateBtn.Displayed)
-            gateBtn.Click();
-
-            //WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(5));
-            //wait.Until(d => truckBtn.Displayed);
-
-            var truckBtn = _driver.FindElement(By.Name("Truck Transaction"));
-
-            //if (truckBtn.Displayed)
-            truckBtn.Click();
-            Log("Truck transaction opened successfully", Color.Green);
-        }
-        catch(Exception ex)
-        {
-            Log($"ERROR: Error performing action: {ex.Message}", Color.Red);
-        }
+        OpenMenu("Truck Transaction");
     }
 
     private void Login_Click(object sender, EventArgs e)

@@ -1,12 +1,9 @@
 ﻿using OpenQA.Selenium;
 using OpenQA.Selenium.Support.UI;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 namespace Utils
 {
     public static class WebDriverExtensions
@@ -47,13 +44,16 @@ namespace Utils
         {
             LogAction?.Invoke($"Waiting for element (timeout: {timeoutSeconds}s)", null);
             var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(timeoutSeconds));
-            wait.Until(d => {
-                try {
+            wait.Until(d =>
+            {
+                try
+                {
                     var isReady = element.Displayed && element.Enabled;
                     if (isReady) LogAction?.Invoke("Element is ready", Color.Green);
                     return isReady;
                 }
-                catch {
+                catch
+                {
                     return false;
                 }
             });
