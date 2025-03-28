@@ -23,6 +23,7 @@ public class WebDriverNavigator : Form
     private Label _sessionInfo;
     private TextBox _usernameInput;
     private TextBox _passwordInput;
+    private TextBox _xpathInput;
 
     // Buttons
     private Button _startSessionBtn;
@@ -73,6 +74,9 @@ public class WebDriverNavigator : Form
         _usernameInput = new TextBox { Location = new Point(830, 10), Width = 150 };
 
         var passwordLabel = new Label { Text = "Senha:", Location = new Point(760, 55), AutoSize = true };
+        // XPath input
+        var xpathLabel = new Label { Text = "XPath:", Location = new Point(270, 15), AutoSize = true };
+        _xpathInput = new TextBox { Text = "//*", Location = new Point(320, 10), Width = 150 };
         _passwordInput = new TextBox { Location = new Point(830, 50), Width = 150, UseSystemPasswordChar = true };
 
 
@@ -137,7 +141,7 @@ public class WebDriverNavigator : Form
 
         // Add controls to panels
         controlsPanel.Controls.AddRange(new Control[] {
-            _startSessionBtn, _refreshElementsBtn, _loginBtn, _truckBtn, _openBtn,
+            _startSessionBtn, _refreshElementsBtn, xpathLabel, _xpathInput, _loginBtn, _truckBtn, _openBtn,
             button2,
             usernameLabel, _usernameInput, passwordLabel, _passwordInput
         });
@@ -312,8 +316,16 @@ public class WebDriverNavigator : Form
 
     private async void RefreshElements_Click(object sender, EventArgs e)
     {
-        BuildElementTree("//*");
-        Log("Elementos atualizados com sucesso", Color.Green);
+        try
+        {
+            var xpath = string.IsNullOrWhiteSpace(_xpathInput.Text) ? "//*" : _xpathInput.Text;
+            BuildElementTree(xpath);
+            Log($"Elementos atualizados com sucesso (XPath: {xpath})", Color.Green);
+        }
+        catch (Exception ex)
+        {
+            Log($"Erro ao atualizar elementos: {ex.Message}", Color.Red);
+        }
     }
 
     private void Open_Click(object sender, EventArgs e)
