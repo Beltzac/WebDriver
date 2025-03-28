@@ -4,6 +4,7 @@ using OpenQA.Selenium.Appium.Windows;
 using OpenQA.Selenium.Interactions;
 using OpenQA.Selenium.Support.UI;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
@@ -339,8 +340,39 @@ public class WebDriverNavigator : Form
         //BuildElementTree("//*[@ControlType='ListItem']"); // nao funciona
         //BuildElementTree("//*[contains(@ControlType,'ListItem')]"); // nao funciona
         //BuildElementTree("//*[contains(@Name,'Row')]"); // Nao funciona
+        ParseDataPanel();
 
 
+    }
+
+    private Dictionary<string, string> ParseDataPanel()
+    {
+        var data = new Dictionary<string, string>();
+        try
+        {
+            var headerItems = _driver.FindElements(By.XPath("//*[@Name='Header Panel']/*"));
+            var rows = _driver.FindElements(By.XPath("//*[@Name='Data Panel']/*"));
+
+            Log("==== DATA PANEL CONTENTS ====", Color.Blue);
+            foreach (var row in rows)
+            {
+                try
+                {
+                    data[row.GetDomAttribute("Name")] = row.Text;
+                    Log($"{row.GetDomAttribute("Name")}: {row.Text}", Color.DarkBlue);
+                }
+                catch (Exception ex)
+                {
+                    Log($"Error parsing row: {ex.Message}", Color.Red);
+                }
+            }
+            Log("============================", Color.Blue);
+        }
+        catch (Exception ex)
+        {
+            Log($"Error finding Data Panel: {ex.Message}", Color.Red);
+        }
+        return data;
     }
 
     private void OpenMenu(string textoPesquisa, string nomeJanela)
