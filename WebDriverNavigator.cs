@@ -32,6 +32,8 @@ public class WebDriverNavigator : Form
     private Button _loginBtn;
     private Button _truckBtn;
     private Button _openBtn;
+    private Button _containerManagementBtn; // Renamed button2 for clarity
+    private Button _showcaseSequenceBtn; // New button
 
     public WebDriverNavigator()
     {
@@ -44,76 +46,74 @@ public class WebDriverNavigator : Form
 
         this.Text = "POC - Automação CTOS - Selenium + FlaUI WebDriver";
         this.Size = new Size(1000, 800);
+        this.Padding = new Padding(10); // Add padding to the form
 
-        // Main controls panel
-        var controlsPanel = new Panel
+        // --- Top Panel for Session, Refresh, XPath ---
+        var topPanel = new FlowLayoutPanel
         {
             Dock = DockStyle.Top,
-            Height = 100,
-            Padding = new Padding(10)
+            AutoSize = true, // Adjust height automatically
+            WrapContents = false, // Keep controls in a single row
+            Padding = new Padding(0, 0, 0, 10) // Add padding below
         };
 
-        // Session controls
-        _startSessionBtn = new Button
-        {
-            Text = "Iniciar Sessão",
-            Location = new Point(10, 10),
-            Size = new Size(120, 30)
-        };
+        _startSessionBtn = new Button { Text = "Iniciar Sessão", Size = new Size(120, 30), Margin = new Padding(5) };
         _startSessionBtn.Click += StartSession_Click;
 
-        _refreshElementsBtn = new Button
-        {
-            Text = "Atualizar Elementos",
-            Location = new Point(140, 10),
-            Size = new Size(120, 30)
-        };
-
+        _refreshElementsBtn = new Button { Text = "Atualizar Elementos", Size = new Size(120, 30), Margin = new Padding(5) };
         _refreshElementsBtn.Click += RefreshElements_Click;
-        // Username/Password Inputs
-        var usernameLabel = new Label { Text = "Usuário:", Location = new Point(760, 15), AutoSize = true };
-        _usernameInput = new TextBox { Location = new Point(830, 10), Width = 150 };
 
-        var passwordLabel = new Label { Text = "Senha:", Location = new Point(760, 55), AutoSize = true };
-        // XPath input
-        var xpathLabel = new Label { Text = "XPath:", Location = new Point(270, 15), AutoSize = true };
-        _xpathInput = new TextBox { Text = "//*", Location = new Point(320, 10), Width = 150 };
-        _passwordInput = new TextBox { Location = new Point(830, 50), Width = 150, UseSystemPasswordChar = true };
+        var xpathLabel = new Label { Text = "XPath:", AutoSize = true, Anchor = AnchorStyles.Left, Margin = new Padding(10, 8, 0, 0) }; // Align vertically
+        _xpathInput = new TextBox { Text = "//*", Width = 200, Margin = new Padding(5) }; // Increased width
 
+        topPanel.Controls.AddRange(new Control[] { _startSessionBtn, _refreshElementsBtn, xpathLabel, _xpathInput });
 
-
-        // Action buttons
-        // Action buttons row 1
-        _loginBtn = new Button
+        // --- Middle Panel for Actions and Login ---
+        var middlePanel = new FlowLayoutPanel
         {
-            Text = "Login",
-            Location = new Point(450, 10),
-            Size = new Size(80, 30)
+            Dock = DockStyle.Top,
+            AutoSize = true,
+            WrapContents = true, // Allow wrapping if needed
+            Padding = new Padding(0, 0, 0, 10)
         };
+
+        _loginBtn = new Button { Text = "Login", Size = new Size(80, 30), Margin = new Padding(5) };
         _loginBtn.Click += Login_Click;
 
-        _truckBtn = new Button
-        {
-            Text = "Truck Transaction",
-            Location = new Point(540, 10),
-            Size = new Size(120, 30)
-        };
+        _truckBtn = new Button { Text = "Truck Transaction", Size = new Size(120, 30), Margin = new Padding(5) };
         _truckBtn.Click += gate_Click;
 
-        _openBtn = new Button
-        {
-            Text = "Conteiner Size",
-            Location = new Point(300, 10),
-            Size = new Size(140, 30)
-        };
+        _openBtn = new Button { Text = "Conteiner Size", Size = new Size(140, 30), Margin = new Padding(5) };
         _openBtn.Click += Open_Click;
 
-        // Additional buttons (2 rows of 6)
-        var button2 = new Button { Text = "Conteiner Management", Location = new Point(450, 50), Size = new Size(200, 30) };
-        button2.Click += (s, e) => { OpenMenu("Management", "Management[CI002]"); };
+        _containerManagementBtn = new Button { Text = "Conteiner Management", Size = new Size(200, 30), Margin = new Padding(5) };
+        _containerManagementBtn.Click += (s, e) => { OpenMenu("Management", "Management[CI002]"); };
 
+        // --- New Showcase Button ---
+        _showcaseSequenceBtn = new Button { Text = "Showcase Sequence", Size = new Size(150, 30), Margin = new Padding(5) };
+        _showcaseSequenceBtn.Click += ShowcaseSequence_Click; // Assign new handler
 
-        // Log panel
+        middlePanel.Controls.AddRange(new Control[] { _loginBtn, _truckBtn, _openBtn, _containerManagementBtn, _showcaseSequenceBtn });
+
+        // --- Right Panel for Credentials ---
+        var credentialsPanel = new FlowLayoutPanel
+        {
+            FlowDirection = FlowDirection.TopDown, // Stack vertically
+            Dock = DockStyle.Right, // Align to the right
+            AutoSize = true,
+            Width = 200, // Fixed width for alignment
+            Padding = new Padding(10, 0, 0, 0) // Add left padding
+        };
+
+        var usernameLabel = new Label { Text = "Usuário:", AutoSize = true, Margin = new Padding(0, 5, 0, 0) };
+        _usernameInput = new TextBox { Width = 180, Margin = new Padding(0, 0, 0, 5) }; // Adjust width
+
+        var passwordLabel = new Label { Text = "Senha:", AutoSize = true, Margin = new Padding(0, 5, 0, 0) };
+        _passwordInput = new TextBox { Width = 180, UseSystemPasswordChar = true, Margin = new Padding(0, 0, 0, 5) };
+
+        credentialsPanel.Controls.AddRange(new Control[] { usernameLabel, _usernameInput, passwordLabel, _passwordInput });
+
+        // --- Log Panel ---
         _logTextBox = new RichTextBox
         {
             Dock = DockStyle.Bottom,
@@ -123,25 +123,26 @@ public class WebDriverNavigator : Form
             ReadOnly = true
         };
 
-        // Element tree
+        // --- Element Tree ---
         _elementTree = new TreeView
         {
-            Dock = DockStyle.Fill,
+            Dock = DockStyle.Fill, // Fill remaining space
             BorderStyle = BorderStyle.FixedSingle,
             ShowNodeToolTips = true
         };
 
-        // Add controls to panels
-        controlsPanel.Controls.AddRange(new Control[] {
-            _startSessionBtn, _refreshElementsBtn, xpathLabel, _xpathInput, _loginBtn, _truckBtn, _openBtn,
-            button2,
-            usernameLabel, _usernameInput, passwordLabel, _passwordInput
-        });
+        // --- Session Info Label (Optional, can be placed elsewhere or removed) ---
+        _sessionInfo = new Label { Text = "Sessão não iniciada", Dock = DockStyle.Bottom, TextAlign = ContentAlignment.MiddleLeft, Height = 20 };
 
-        this.Controls.AddRange(new Control[] {
-            _elementTree, controlsPanel, _logTextBox
-        });
 
+        // --- Add Panels to Form ---
+        // Order matters for docking: Bottom and Right first, then Top, then Fill
+        this.Controls.Add(_sessionInfo); // Add session info label first at the bottom
+        this.Controls.Add(_logTextBox);
+        this.Controls.Add(credentialsPanel); // Add right panel before top/fill
+        this.Controls.Add(middlePanel);      // Add middle panel
+        this.Controls.Add(topPanel);         // Add top panel
+        this.Controls.Add(_elementTree);     // Add tree view to fill remaining space
     }
 
     public class FlaUIDriverOptions : AppiumOptions
@@ -474,6 +475,218 @@ public class WebDriverNavigator : Form
             Log($"ERRO: Falha no login: {ex.Message}", Color.Red);
         }
     }
+// Method to attempt starting a session
+private bool TryStartSession()
+{
+    Log("Attempting to start session...", Color.Blue);
+    try
+    {
+        var opt = FlaUIDriverOptions.ForApp("C:\\Users\\Beltzac\\Desktop\\DIS\\CM.CTOS.WinUIAdmin.exe");
+        _driver = new WindowsDriver(new Uri("http://192.168.56.56:4723/"), opt);
+        _sessionActive = true;
+        // _sessionInfo might be null if InitializeComponents hasn't fully run or if called early
+        if (_sessionInfo != null) _sessionInfo.Text = $"ID da Sessão: {_sessionId}";
+        Log("Session started successfully.", Color.Green);
+        return true;
+    }
+    catch (Exception ex)
+    {
+        if (_sessionInfo != null) _sessionInfo.Text = $"Error: {ex.Message}";
+        Log($"Failed to start session: {ex.Message}", Color.Red);
+        _sessionActive = false;
+        return false;
+    }
+}
+
+// Method to attempt login
+private bool TryLogin()
+{
+    Log("Attempting to login...", Color.Blue);
+    try
+    {
+        var win = _driver.WindowHandles;
+        _driver.SwitchTo().Window(win.First());
+
+        var userNameField = _driver.FindElement(By.Id("txtUserName"), 10);
+        var passwordField = _driver.FindElement(By.Id("txtPassword"), 10);
+        var okButton = _driver.FindElement(By.Id("btnOK"), 10);
+
+        userNameField.WaitForElement(_driver);
+        userNameField.Click();
+        userNameField.SendKeys(_usernameInput.Text);
+        Log("Username entered.", Color.Blue);
+
+        passwordField.WaitForElement(_driver);
+        passwordField.SendKeys(_passwordInput.Text);
+        Log("Password entered.", Color.Blue);
+
+        okButton.WaitForElement(_driver);
+        okButton.Click();
+        Log("OK button clicked.", Color.Blue);
+
+        new WebDriverWait(_driver, TimeSpan.FromSeconds(10))
+            .Until(d => _driver.WindowHandles.Count > 0); // Basic check, might need refinement
+
+        _driver.SwitchTo().Window(_driver.WindowHandles.First());
+        Log("Switched to window: " + _driver.Title, Color.Blue);
+
+        var expectedWindowTitle = "CTOS DIS";
+        if (!_driver.Title.Contains(expectedWindowTitle)) // Use Contains for flexibility
+        {
+             throw new Exception($"Expected window title '{expectedWindowTitle}' not found. Actual: '{_driver.Title}'");
+        }
+
+        Log("Login successful.", Color.Green);
+        return true;
+    }
+    catch (Exception ex)
+    {
+        Log($"ERROR: Login failed: {ex.Message}", Color.Red);
+        return false;
+    }
+}
+
+// Method to attempt opening a menu
+private bool TryOpenMenu(string menuSearchText, string expectedWindowTitlePart)
+{
+    Log($"Attempting to open menu: {menuSearchText}", Color.Blue);
+    try
+    {
+        _driver.SwitchTo().ActiveElement().SendKeys(OpenQA.Selenium.Keys.Control + "o");
+
+        new Actions(_driver)
+            .SendKeys(menuSearchText)
+            .SendKeys(OpenQA.Selenium.Keys.ArrowDown)
+            .SendKeys(OpenQA.Selenium.Keys.Enter)
+            .SendKeys(OpenQA.Selenium.Keys.Enter)
+            .SendKeys(OpenQA.Selenium.Keys.Enter)
+            .Perform();
+
+        Log($"Waiting for menu '{menuSearchText}' to open...", Color.Blue);
+
+        // Wait for the window title to contain the expected part
+        bool titleMatches = new WebDriverWait(_driver, TimeSpan.FromSeconds(10))
+            .Until(d => d.Title.ToUpper().Contains(expectedWindowTitlePart.ToUpper()));
+
+        if (!titleMatches)
+        {
+            throw new Exception($"Expected window title part '{expectedWindowTitlePart}' not found. Actual title: '{_driver.Title}'");
+        }
+
+        Log($"Menu opened successfully: {_driver.Title}", Color.Green);
+        return true;
+    }
+    catch (Exception ex)
+    {
+        Log($"ERROR: Failed to open menu '{menuSearchText}': {ex.Message}", Color.Red);
+        return false;
+    }
+}
+
+// Method to attempt parsing the data panel
+private bool TryParseDataPanel()
+{
+    Log("Attempting to parse Data Panel...", Color.Blue);
+    var tableData = new List<Dictionary<string, string>>();
+    try
+    {
+        var headers = _driver.FindElements(By.XPath("//*[@Name='Header Panel']/*"), 10)
+                              .Select(h => h.Text)
+                              .ToList();
+
+        var rows = _driver.FindElements(By.XPath("//*[@Name='Data Panel']/*"), 10);
+
+        if (!headers.Any() || !rows.Any())
+        {
+             Log("Warning: Headers or rows not found in Data Panel.", Color.Orange);
+             // Decide if this is a failure or just empty data
+             // return false; // Uncomment if empty panel is considered a failure
+        }
+
+        Log("==== DATA PANEL CONTENTS ====", Color.Blue);
+        Log($"Headers: {string.Join(";", headers)}", Color.DarkBlue);
+
+        foreach (var row in rows)
+        {
+            try
+            {
+                var cells = row.Text.Split(';'); // Assuming semicolon delimiter
+                var rowData = new Dictionary<string, string>();
+
+                for (int i = 0; i < Math.Min(headers.Count, cells.Length); i++)
+                {
+                    rowData[headers[i]] = cells[i].Trim();
+                }
+                tableData.Add(rowData);
+                Log($"Row: {string.Join(";", rowData.Values)}", Color.DarkBlue);
+            }
+            catch (Exception ex)
+            {
+                // Log row-specific error but continue processing other rows
+                Log($"Error parsing row: {ex.Message}", Color.Red);
+            }
+        }
+        Log("============================", Color.Blue);
+        Log("Data Panel parsed successfully.", Color.Green);
+        return true; // Return true even if some rows had errors, as long as the panel itself was accessed
+    }
+    catch (Exception ex)
+    {
+        Log($"ERROR: Failed to find or parse Data Panel: {ex.Message}", Color.Red);
+        return false; // Return false if the panel couldn't be accessed at all
+    }
+}
+
+
+
+// --- New Event Handler for Showcase Button ---
+private async void ShowcaseSequence_Click(object sender, EventArgs e)
+{
+    Log("Starting showcase sequence...", Color.Magenta);
+
+    // Step 1: Start Session
+    Log("Step 1: Starting Session...", Color.Cyan);
+    if (!TryStartSession())
+    {
+        Log("Step 1 FAILED. Aborting sequence.", Color.Red);
+        return;
+    }
+    Log("Step 1 SUCCESS.", Color.Green);
+
+    // Step 2: Login
+    Log("Step 2: Performing Login...", Color.Cyan);
+    if (!TryLogin())
+    {
+        Log("Step 2 FAILED. Aborting sequence.", Color.Red);
+        return;
+    }
+    Log("Step 2 SUCCESS.", Color.Green);
+
+    // Step 3: Open Menu
+    Log("Step 3: Opening Menu 'Size'...", Color.Cyan);
+    if (!TryOpenMenu("Size", "Size[RM022]")) // Pass expected title part
+    {
+        Log("Step 3 FAILED. Aborting sequence.", Color.Red);
+        return;
+    }
+    Log("Step 3 SUCCESS.", Color.Green);
+
+    // Step 4: Parse Data Panel
+    Log("Step 4: Parsing Data Panel...", Color.Cyan);
+    if (!TryParseDataPanel())
+    {
+        Log("Step 4 FAILED. Sequence incomplete.", Color.Red);
+        // Decide if you want to return or just log failure
+        // return;
+    }
+    else
+    {
+        Log("Step 4 SUCCESS.", Color.Green);
+    }
+
+    Log("Showcase sequence finished.", Color.Magenta);
+}
+
 
     [STAThread]
     public static void Main()
