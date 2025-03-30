@@ -345,21 +345,38 @@ public class WebDriverNavigator : Form
 
     }
 
-    private Dictionary<string, string> ParseDataPanel()
+    private List<Dictionary<string, string>> ParseDataPanel()
     {
-        var data = new Dictionary<string, string>();
+        var tableData = new List<Dictionary<string, string>>();
         try
         {
-            var headerItems = _driver.FindElements(By.XPath("//*[@Name='Header Panel']/*"));
-            var rows = _driver.FindElements(By.XPath("//*[@Name='Data Panel']/*"));
+            // Get headers
+            var headers = _driver.FindElements(By.XPath("//*[@Name='Header Panel']/*"), 10)
+                                .Select(h => h.Text)
+                                .ToList();
+
+            // Get rows
+            var rows = _driver.FindElements(By.XPath("//*[@Name='Data Panel']/*"), 10);
 
             Log("==== DATA PANEL CONTENTS ====", Color.Blue);
+
+            // Log headers
+            Log($"Headers: {string.Join(";", headers)}", Color.DarkBlue);
+
             foreach (var row in rows)
             {
                 try
                 {
-                    data[row.GetDomAttribute("Name")] = row.Text;
-                    Log($"{row.GetDomAttribute("Name")}: {row.Text}", Color.DarkBlue);
+                    var cells = row.Text.Split(";");
+                    var rowData = new Dictionary<string, string>();
+
+                    for (int i = 0; i < Math.Min(headers.Count, cells.Length); i++)
+                    {
+                        rowData[headers[i]] = cells[i].Trim();
+                    }
+
+                    tableData.Add(rowData);
+                    Log($"Row: {string.Join(";", rowData.Values)}", Color.DarkBlue);
                 }
                 catch (Exception ex)
                 {
@@ -372,7 +389,7 @@ public class WebDriverNavigator : Form
         {
             Log($"Error finding Data Panel: {ex.Message}", Color.Red);
         }
-        return data;
+        return tableData;
     }
 
     private void OpenMenu(string textoPesquisa, string nomeJanela)

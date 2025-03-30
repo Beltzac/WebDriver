@@ -3,6 +3,7 @@ using OpenQA.Selenium.Support.UI;
 using System;
 using System.Collections.ObjectModel;
 using System.Drawing;
+using System.Runtime.InteropServices;
 
 namespace Utils
 {
@@ -16,7 +17,23 @@ namespace Utils
             if (timeoutInSeconds > 0)
             {
                 var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(timeoutInSeconds));
-                var element = wait.Until(drv => drv.FindElement(by));
+                //wait.IgnoreExceptionTypes(typeof(COMException));
+                //var element = wait.Until();
+
+                //IWebElement element = null;
+                
+                var element = wait.Until(d =>
+                {
+                    try
+                    {
+                        return d.FindElement(by);
+                    }
+                    catch
+                    {
+                        return null;
+                    }
+                });
+
                 LogAction?.Invoke($"Elemento encontrado por {by}", Color.Green);
                 return element;
             }
@@ -31,7 +48,23 @@ namespace Utils
             if (timeoutInSeconds > 0)
             {
                 var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(timeoutInSeconds));
-                var elements = wait.Until(drv => (drv.FindElements(by).Count > 0) ? drv.FindElements(by) : null);
+                //wait.IgnoreExceptionTypes(typeof(COMException));
+                //var elements = wait.Until();
+
+
+                var elements = wait.Until(d =>
+                {
+                    try
+                    {
+                        return (d.FindElements(by).Count > 0) ? d.FindElements(by) : null;
+                    }
+                    catch
+                    {
+                        return null;
+                    }
+                });
+
+
                 LogAction?.Invoke($"Encontrados {elements?.Count ?? 0} elementos por {by}", elements?.Count > 0 ? Color.Green : Color.Orange);
                 return elements;
             }
