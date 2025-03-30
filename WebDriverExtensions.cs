@@ -13,6 +13,7 @@ namespace Utils
 
         public static IWebElement FindElement(this IWebDriver driver, By by, int timeoutInSeconds)
         {
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             LogAction?.Invoke($"Procurando elemento por {by} com timeout de {timeoutInSeconds}s", null);
             if (timeoutInSeconds > 0)
             {
@@ -21,7 +22,7 @@ namespace Utils
                 //var element = wait.Until();
 
                 //IWebElement element = null;
-                
+
                 var element = wait.Until(d =>
                 {
                     try
@@ -34,16 +35,19 @@ namespace Utils
                     }
                 });
 
-                LogAction?.Invoke($"Elemento encontrado por {by}", Color.Green);
+                stopwatch.Stop();
+                LogAction?.Invoke($"Elemento encontrado por {by} em {stopwatch.ElapsedMilliseconds}ms", Color.Green);
                 return element;
             }
             var immediateElement = driver.FindElement(by);
-            LogAction?.Invoke($"Elemento encontrado por {by} (sem espera)", Color.Green);
+            stopwatch.Stop();
+            LogAction?.Invoke($"Elemento encontrado por {by} (sem espera) em {stopwatch.ElapsedMilliseconds}ms", Color.Green);
             return immediateElement;
         }
 
         public static ReadOnlyCollection<IWebElement> FindElements(this IWebDriver driver, By by, int timeoutInSeconds)
         {
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             LogAction?.Invoke($"Procurando elementos por {by} com timeout de {timeoutInSeconds}s", null);
             if (timeoutInSeconds > 0)
             {
@@ -64,17 +68,19 @@ namespace Utils
                     }
                 });
 
-
-                LogAction?.Invoke($"Encontrados {elements?.Count ?? 0} elementos por {by}", elements?.Count > 0 ? Color.Green : Color.Orange);
+                stopwatch.Stop();
+                LogAction?.Invoke($"Encontrados {elements?.Count ?? 0} elementos por {by} em {stopwatch.ElapsedMilliseconds}ms", elements?.Count > 0 ? Color.Green : Color.Orange);
                 return elements;
             }
             var immediateElements = driver.FindElements(by);
-            LogAction?.Invoke($"Encontrados {immediateElements.Count} elementos por {by} (sem espera)", immediateElements.Count > 0 ? Color.Green : Color.Orange);
+            stopwatch.Stop();
+            LogAction?.Invoke($"Encontrados {immediateElements.Count} elementos por {by} (sem espera) em {stopwatch.ElapsedMilliseconds}ms", immediateElements.Count > 0 ? Color.Green : Color.Orange);
             return immediateElements;
         }
 
         public static void WaitForElement(this IWebElement element, IWebDriver driver, int timeoutSeconds = 10)
         {
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             LogAction?.Invoke($"Aguardando elemento (timeout: {timeoutSeconds}s)", null);
             var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(timeoutSeconds));
             wait.Until(d =>
@@ -82,7 +88,11 @@ namespace Utils
                 try
                 {
                     var isReady = element.Displayed && element.Enabled;
-                    if (isReady) LogAction?.Invoke("Elemento está pronto", Color.Green);
+                    if (isReady)
+                    {
+                        stopwatch.Stop();
+                        LogAction?.Invoke($"Elemento está pronto em {stopwatch.ElapsedMilliseconds}ms", Color.Green);
+                    }
                     return isReady;
                 }
                 catch
