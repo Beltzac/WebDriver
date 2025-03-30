@@ -122,15 +122,6 @@ public class WebDriverNavigator : Form
             ScrollBars = RichTextBoxScrollBars.Vertical,
             ReadOnly = true
         };
-        // Session info
-        _sessionInfo = new Label
-        {
-            Dock = DockStyle.Top,
-            Text = "Sessão não iniciada",
-            Padding = new Padding(10),
-            Height = 40,
-            BackColor = SystemColors.ControlLight
-        };
 
         // Element tree
         _elementTree = new TreeView
@@ -148,7 +139,7 @@ public class WebDriverNavigator : Form
         });
 
         this.Controls.AddRange(new Control[] {
-            _elementTree, _sessionInfo, controlsPanel, _logTextBox
+            _elementTree, controlsPanel, _logTextBox
         });
 
     }
