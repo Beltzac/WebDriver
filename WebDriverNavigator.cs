@@ -64,7 +64,7 @@ public class WebDriverNavigator : Form
         _refreshElementsBtn.Click += RefreshElements_Click;
 
         var xpathLabel = new Label { Text = "XPath:", AutoSize = true, Anchor = AnchorStyles.Left, Margin = new Padding(10, 8, 0, 0) };
-        _xpathInput = new TextBox { Text = "//*", Width = 200, Margin = new Padding(5) };
+        _xpathInput = new TextBox { Text = "//Button", Width = 200, Margin = new Padding(5) };
 
         topPanel.Controls.AddRange(new Control[] { _startSessionBtn, _refreshElementsBtn, xpathLabel, _xpathInput });
 
@@ -135,12 +135,12 @@ public class WebDriverNavigator : Form
         _sessionInfo = new Label { Text = "Sessão não iniciada", Dock = DockStyle.Bottom, TextAlign = ContentAlignment.MiddleLeft, Height = 20 };
 
         // --- Add Panels to Form ---
+        this.Controls.Add(_elementTree);
         this.Controls.Add(_sessionInfo);
         this.Controls.Add(_logTextBox);
         this.Controls.Add(credentialsPanel);
         this.Controls.Add(middlePanel);
         this.Controls.Add(topPanel);
-        this.Controls.Add(_elementTree);
     }
 
     // --- FlaUI Driver Options Helper ---
