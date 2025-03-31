@@ -2,8 +2,11 @@
 using OpenQA.Selenium.Support.UI;
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 using System.Runtime.InteropServices;
+using System.Xml.Linq;
 
 namespace Utils
 {
@@ -88,6 +91,37 @@ namespace Utils
                 try
                 {
                     var isReady = element.Displayed && element.Enabled;
+                    if (isReady)
+                    {
+                        stopwatch.Stop();
+                        LogAction?.Invoke($"Elemento está pronto em {stopwatch.ElapsedMilliseconds}ms", Color.Green);
+                    }
+                    return isReady;
+                }
+                catch
+                {
+                    return false;
+                }
+            });
+        }
+
+        public static void ChangeToWindow(this IWebDriver driver, string title, int timeoutSeconds = 10)
+        {
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            LogAction?.Invoke($"Aguardando elemento (timeout: {timeoutSeconds}s)", null);
+
+            var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(timeoutSeconds));
+
+            wait.Until(d =>
+            {
+                try
+                {
+                    if (driver.WindowHandles.Count == 0)
+                        return false;
+
+                    driver.SwitchTo().Window(driver.WindowHandles.First());
+
+                    var isReady = d.Title.Contains(title);
                     if (isReady)
                     {
                         stopwatch.Stop();

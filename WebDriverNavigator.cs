@@ -9,13 +9,13 @@ using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Utils;
+using Utils; // Assuming WebDriverExtensions is in this namespace
 
 public class WebDriverNavigator : Form
 {
     // Session management
     private IWebDriver _driver;
-    private string _sessionId;
+    private string _sessionId; // Note: _sessionId is declared but never assigned a value from the driver session.
     private bool _sessionActive = false;
 
     // UI Controls
@@ -32,8 +32,8 @@ public class WebDriverNavigator : Form
     private Button _loginBtn;
     private Button _truckBtn;
     private Button _openBtn;
-    private Button _containerManagementBtn; // Renamed button2 for clarity
-    private Button _showcaseSequenceBtn; // New button
+    private Button _containerManagementBtn;
+    private Button _showcaseSequenceBtn;
 
     public WebDriverNavigator()
     {
@@ -42,7 +42,7 @@ public class WebDriverNavigator : Form
 
     private void InitializeComponents()
     {
-        Utils.WebDriverExtensions.LogAction = (message, color) => Log(message, color);
+        WebDriverExtensions.LogAction = (message, color) => Log(message, color);
 
         this.Text = "POC - Automação CTOS - Selenium + FlaUI WebDriver";
         this.Size = new Size(1000, 800);
@@ -52,61 +52,60 @@ public class WebDriverNavigator : Form
         var topPanel = new FlowLayoutPanel
         {
             Dock = DockStyle.Top,
-            AutoSize = true, // Adjust height automatically
-            WrapContents = false, // Keep controls in a single row
-            Padding = new Padding(0, 0, 0, 10) // Add padding below
+            AutoSize = true,
+            WrapContents = false,
+            Padding = new Padding(0, 0, 0, 10)
         };
 
         _startSessionBtn = new Button { Text = "Iniciar Sessão", Size = new Size(120, 30), Margin = new Padding(5) };
-        _startSessionBtn.Click += StartSession_Click;
+        _startSessionBtn.Click += StartSession_Click; // Connects to the updated handler
 
         _refreshElementsBtn = new Button { Text = "Atualizar Elementos", Size = new Size(120, 30), Margin = new Padding(5) };
         _refreshElementsBtn.Click += RefreshElements_Click;
 
-        var xpathLabel = new Label { Text = "XPath:", AutoSize = true, Anchor = AnchorStyles.Left, Margin = new Padding(10, 8, 0, 0) }; // Align vertically
-        _xpathInput = new TextBox { Text = "//*", Width = 200, Margin = new Padding(5) }; // Increased width
+        var xpathLabel = new Label { Text = "XPath:", AutoSize = true, Anchor = AnchorStyles.Left, Margin = new Padding(10, 8, 0, 0) };
+        _xpathInput = new TextBox { Text = "//*", Width = 200, Margin = new Padding(5) };
 
         topPanel.Controls.AddRange(new Control[] { _startSessionBtn, _refreshElementsBtn, xpathLabel, _xpathInput });
 
-        // --- Middle Panel for Actions and Login ---
+        // --- Middle Panel for Actions ---
         var middlePanel = new FlowLayoutPanel
         {
             Dock = DockStyle.Top,
             AutoSize = true,
-            WrapContents = true, // Allow wrapping if needed
+            WrapContents = true,
             Padding = new Padding(0, 0, 0, 10)
         };
 
         _loginBtn = new Button { Text = "Login", Size = new Size(80, 30), Margin = new Padding(5) };
-        _loginBtn.Click += Login_Click;
+        _loginBtn.Click += Login_Click; // Connects to the updated handler
 
         _truckBtn = new Button { Text = "Truck Transaction", Size = new Size(120, 30), Margin = new Padding(5) };
-        _truckBtn.Click += gate_Click;
+        _truckBtn.Click += gate_Click; // Connects to the updated handler
 
         _openBtn = new Button { Text = "Conteiner Size", Size = new Size(140, 30), Margin = new Padding(5) };
-        _openBtn.Click += Open_Click;
+        _openBtn.Click += Open_Click; // Connects to the updated handler
 
         _containerManagementBtn = new Button { Text = "Conteiner Management", Size = new Size(200, 30), Margin = new Padding(5) };
-        _containerManagementBtn.Click += (s, e) => { OpenMenu("Management", "Management[CI002]"); };
+        _containerManagementBtn.Click += async (s, e) => { await TryOpenMenuAsync("Management", "Management[CI002]"); }; // Use async TryOpenMenu
 
-        // --- New Showcase Button ---
         _showcaseSequenceBtn = new Button { Text = "Showcase Sequence", Size = new Size(150, 30), Margin = new Padding(5) };
-        _showcaseSequenceBtn.Click += ShowcaseSequence_Click; // Assign new handler
+        _showcaseSequenceBtn.Click += ShowcaseSequence_Click;
 
         middlePanel.Controls.AddRange(new Control[] { _loginBtn, _truckBtn, _openBtn, _containerManagementBtn, _showcaseSequenceBtn });
 
         // --- Right Panel for Credentials ---
         var credentialsPanel = new FlowLayoutPanel
         {
-            FlowDirection = FlowDirection.TopDown, // Stack vertically
-            Dock = DockStyle.Right, // Align to the right
+            FlowDirection = FlowDirection.TopDown,
+            Dock = DockStyle.Right,
             AutoSize = true,
-            Width = 200, // Fixed width for alignment
-            Padding = new Padding(10, 0, 0, 0) // Add left padding
+            Width = 200,
+            Padding = new Padding(10, 0, 0, 0)
         };
 
         var usernameLabel = new Label { Text = "Usuário:", AutoSize = true, Margin = new Padding(0, 5, 0, 0) };
-        _usernameInput = new TextBox { Width = 180, Margin = new Padding(0, 0, 0, 5) }; // Adjust width
+        _usernameInput = new TextBox { Width = 180, Margin = new Padding(0, 0, 0, 5) };
 
         var passwordLabel = new Label { Text = "Senha:", AutoSize = true, Margin = new Padding(0, 5, 0, 0) };
         _passwordInput = new TextBox { Width = 180, UseSystemPasswordChar = true, Margin = new Padding(0, 0, 0, 5) };
@@ -126,25 +125,25 @@ public class WebDriverNavigator : Form
         // --- Element Tree ---
         _elementTree = new TreeView
         {
-            Dock = DockStyle.Fill, // Fill remaining space
+            Dock = DockStyle.Fill,
             BorderStyle = BorderStyle.FixedSingle,
-            ShowNodeToolTips = true
+            ShowNodeToolTips = true,
+            Scrollable = true
         };
 
-        // --- Session Info Label (Optional, can be placed elsewhere or removed) ---
+        // --- Session Info Label ---
         _sessionInfo = new Label { Text = "Sessão não iniciada", Dock = DockStyle.Bottom, TextAlign = ContentAlignment.MiddleLeft, Height = 20 };
 
-
         // --- Add Panels to Form ---
-        // Order matters for docking: Bottom and Right first, then Top, then Fill
-        this.Controls.Add(_sessionInfo); // Add session info label first at the bottom
+        this.Controls.Add(_sessionInfo);
         this.Controls.Add(_logTextBox);
-        this.Controls.Add(credentialsPanel); // Add right panel before top/fill
-        this.Controls.Add(middlePanel);      // Add middle panel
-        this.Controls.Add(topPanel);         // Add top panel
-        this.Controls.Add(_elementTree);     // Add tree view to fill remaining space
+        this.Controls.Add(credentialsPanel);
+        this.Controls.Add(middlePanel);
+        this.Controls.Add(topPanel);
+        this.Controls.Add(_elementTree);
     }
 
+    // --- FlaUI Driver Options Helper ---
     public class FlaUIDriverOptions : AppiumOptions
     {
         public static FlaUIDriverOptions ForApp(string path)
@@ -157,162 +156,370 @@ public class WebDriverNavigator : Form
             };
             return options;
         }
-
     }
 
+    // --- Core Action Methods (Returning Boolean) ---
 
-    private async void StartSession_Click(object sender, EventArgs e)
+    private bool TryStartSession()
     {
-        Log("Iniciando nova sessão...");
+        Log("Tentando iniciar sessão...", Color.Blue);
         try
         {
+            // Ensure previous driver is disposed if active
+            if (_driver != null)
+            {
+                Log("Descartando sessão anterior do driver.", Color.Orange);
+                _driver.Quit();
+                _driver.Dispose();
+                _driver = null;
+                _sessionActive = false;
+            }
+
             var opt = FlaUIDriverOptions.ForApp("C:\\Users\\Beltzac\\Desktop\\DIS\\CM.CTOS.WinUIAdmin.exe");
-            _driver = new WindowsDriver(new Uri("http://192.168.56.56:4723/"), opt);
+            // Consider adding timeouts to the options
+            // opt.AddAdditionalAppiumOption("timeouts", "{ \"implicit\": 5000 }"); // Example: 5 second implicit wait
 
+            _driver = new WindowsDriver(new Uri("http://192.168.56.56:4723/"), opt, TimeSpan.FromSeconds(60)); // Added timeout
             _sessionActive = true;
-            _sessionInfo.Text = $"ID da Sessão: {_sessionId}";
-            Log("Sessão iniciada com sucesso", Color.Green);
 
+            // Get actual session ID if possible (example, might need adjustment based on driver capabilities)
+            // _sessionId = _driver.SessionId.ToString();
+
+            if (_sessionInfo != null) _sessionInfo.Text = $"Sessão Ativa: Sim"; // Update session info label
+            Log("Sessão iniciada com sucesso.", Color.Green);
+            return true;
         }
         catch (Exception ex)
         {
-            _sessionInfo.Text = $"Erro: {ex.Message}";
-            Log($"Falha ao iniciar sessão: {ex.Message}");
+            if (_sessionInfo != null) _sessionInfo.Text = $"Erro ao iniciar: {ex.Message}";
+            Log($"Falha ao iniciar sessão: {ex.Message}", Color.Red);
+            _sessionActive = false;
+            // Clean up driver if partially created
+            if (_driver != null)
+            {
+                try { _driver.Quit(); } catch { /* Ignore cleanup errors */ }
+                try { _driver.Dispose(); } catch { /* Ignore cleanup errors */ }
+                _driver = null;
+            }
+            return false;
         }
     }
 
-
-    private void BuildElementTree(string xpath)
+    private bool TryLogin()
     {
+        if (!_sessionActive || _driver == null)
+        {
+            Log("Login falhou: Sessão não ativa.", Color.Red);
+            return false;
+        }
 
+        Log("Tentando login...", Color.Blue);
         try
         {
-            _elementTree.Nodes.Clear();
+            _driver.ChangeToWindow("Login");
 
-            Log("Construindo árvore de elementos com XPath: " + xpath);
+            Log($"Trocado para janela de login: {_driver.Title}", Color.Blue);
 
-            var elements = _driver.FindElements(By.XPath(xpath));
+            // Use explicit waits for robustness
 
-            Log($"Encontrado {elements.Count} elementos");
+            var userNameField = _driver.FindElement(By.Id("txtUserName"), 10);
+            var passwordField = _driver.FindElement(By.Id("txtPassword"), 10);
+            var okButton = _driver.FindElement(By.Id("btnOK"), 10);
 
-            foreach (var element in elements)
+            userNameField.Clear(); // Clear fields before sending keys
+            userNameField.SendKeys(_usernameInput.Text);
+            Log("Usuário inserido.", Color.Blue);
+
+            passwordField.Clear();
+            passwordField.SendKeys(_passwordInput.Text);
+            Log("Senha inserida.", Color.Blue);
+
+            okButton.Click();
+            Log("Botão OK clicado.", Color.Blue);
+
+            // Wait for the main application window to appear after login
+            _driver.ChangeToWindow("CTOS DIS", 20);
+
+            Log($"Trocado para janela principal: {_driver.Title}", Color.Blue);
+            Log("Login realizado com sucesso.", Color.Green);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log($"ERRO: Login falhou: {ex.Message}", Color.Red);
+            // Attempt to log current window title for debugging
+            try { Log($"Título da janela atual durante falha no login: {_driver?.Title}", Color.Orange); } catch { }
+            return false;
+        }
+    }
+
+    private bool TryOpenMenu(string menuSearchText, string expectedWindowTitlePart)
+    {
+        if (!_sessionActive || _driver == null)
+        {
+            Log($"Abrir Menu '{menuSearchText}' falhou: Sessão não ativa.", Color.Red);
+            return false;
+        }
+
+        Log($"Tentando abrir menu: {menuSearchText}", Color.Blue);
+        try
+        {
+            // Use Actions for key combinations
+            new Actions(_driver)
+                .KeyDown(OpenQA.Selenium.Keys.Control)
+                .SendKeys("o")
+                .KeyUp(OpenQA.Selenium.Keys.Control)
+                .Perform();
+            Log("Enviado Ctrl+O", Color.Blue);
+
+            // Send keys to the active element (should be the search input now)
+            new Actions(_driver)
+                .SendKeys(menuSearchText)
+                .SendKeys(OpenQA.Selenium.Keys.ArrowDown) // Navigate if needed
+                .SendKeys(OpenQA.Selenium.Keys.Enter)     // Select
+                .SendKeys(OpenQA.Selenium.Keys.Enter)     // Select
+                .SendKeys(OpenQA.Selenium.Keys.Enter)     // Select
+                .Perform();
+            Log($"Enviado texto de busca '{menuSearchText}' e Enter.", Color.Blue);
+
+            _driver.ChangeToWindow(expectedWindowTitlePart);
+
+            Log($"Menu aberto com sucesso: {_driver.Title}", Color.Green);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log($"ERRO: Falha ao abrir menu '{menuSearchText}': {ex.Message}", Color.Red);
+             try { Log($"Título da janela atual durante falha ao abrir menu: {_driver?.Title}", Color.Orange); } catch { }
+            return false;
+        }
+    }
+
+     private bool TryParseDataPanel()
+    {
+         if (!_sessionActive || _driver == null)
+        {
+            Log("Analisar Painel de Dados falhou: Sessão não ativa.", Color.Red);
+            return false;
+        }
+        Log("Tentando analisar Painel de Dados...", Color.Blue);
+        var tableData = new List<Dictionary<string, string>>();
+        try
+        {
+            // Ensure focus is on the correct window (assuming it's the last opened one)
+            _driver.SwitchTo().Window(_driver.WindowHandles.Last());
+            Log($"Analisando painel de dados na janela: {_driver.Title}", Color.Blue);
+
+            var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
+
+            // Wait for header and data panels to be present
+            var headerPanel = wait.Until(d => d.FindElement(By.XPath("//*[@Name='Header Panel']")));
+            var dataPanel = wait.Until(d => d.FindElement(By.XPath("//*[@Name='Data Panel']")));
+
+            var headers = headerPanel.FindElements(By.XPath("./*")) // Find children of header panel
+                                     .Select(h => h.Text.Trim())
+                                     .ToList();
+
+            var rows = dataPanel.FindElements(By.XPath("./*")); // Find children of data panel
+
+            if (!headers.Any())
+            {
+                 Log("Aviso: Cabeçalhos não encontrados no Painel de Dados.", Color.Orange);
+                 // Decide if this is a failure
+                 // return false;
+            }
+             if (!rows.Any())
+            {
+                 Log("Aviso: Linhas não encontradas no Painel de Dados.", Color.Orange);
+                 // Decide if this is a failure
+                 // return false;
+            }
+
+            Log("==== CONTEÚDO DO PAINEL DE DADOS ====", Color.Blue);
+            Log($"Cabeçalhos: {string.Join(" | ", headers)}", Color.DarkBlue); // Use pipe for clarity
+
+            foreach (var row in rows)
             {
                 try
                 {
-                    var location = element.Location;
-                    var size = element.Size;
-                    var enabled = element.Enabled;
-                    var name = element.GetDomAttribute("Name");
-                    var tipo = element.GetDomAttribute("ControlType");
+                    // Get cell data - This might need adjustment based on actual element structure within the row
+                    // Option 1: Assuming row text contains delimited values
+                    // var cells = row.Text.Split(';'); // Adjust delimiter if needed
 
-                    var node = new TreeNode($"{name ?? "Sem nome"} ({tipo}) - {element.GetAttribute("Value") ?? element.Text ?? "Sem valor"}")
+                    // Option 2: Assuming cells are child elements (more robust)
+                    var cellElements = row.FindElements(By.XPath("./*")); // Find children of the row
+                    var cells = cellElements.Select(c => c.Text.Trim()).ToList();
+
+
+                    var rowData = new Dictionary<string, string>();
+                    for (int i = 0; i < Math.Min(headers.Count, cells.Count); i++)
                     {
-                        Tag = element,
-                    };
-
-                    // Add action buttons as child nodes
-                    var clickNode = new TreeNode("Clicar") { Tag = new { Action = "click", Element = element } };
-                    var setValueNode = new TreeNode("Definir Valor") { Tag = new { Action = "setValue", Element = element } };
-                    var detailsNode = new TreeNode("Detalhes") { Tag = new { Action = "showDetails", Element = element, Loaded = false } }; // Add details node
-
-                    node.Nodes.Add(clickNode);
-                    node.Nodes.Add(setValueNode);
-                    node.Nodes.Add(detailsNode); // Add details node to parent
-
-                    _elementTree.Nodes.Add(node);
+                        // Handle potential empty headers
+                        if (!string.IsNullOrWhiteSpace(headers[i]))
+                        {
+                             rowData[headers[i]] = cells[i];
+                        }
+                        else
+                        {
+                            Log($"Aviso: Cabeçalho vazio no índice {i}", Color.Orange);
+                        }
+                    }
+                    tableData.Add(rowData);
+                    Log($"Linha: {string.Join(" | ", rowData.Values)}", Color.DarkBlue);
                 }
                 catch (StaleElementReferenceException)
                 {
-                    continue;
+                    Log("Pulando linha devido a StaleElementReferenceException.", Color.Orange);
+                    continue; // Skip this row if it became stale
+                }
+                catch (Exception ex)
+                {
+                    Log($"Erro ao analisar linha: {ex.Message}", Color.Red);
                 }
             }
-
-            // Add event handler for node clicks
-            _elementTree.NodeMouseClick += async (sender, e) =>
-            {
-                if (e.Node?.Tag is { } tag && tag.GetType().GetProperty("Action") != null)
-                {
-                    dynamic actionInfo = tag;
-                    var element = (IWebElement)actionInfo.Element;
-                    var action = (string)actionInfo.Action;
-
-                    try
-                    {
-                        if (action == "click")
-                        {
-                            element.Click();
-                            e.Node.BackColor = Color.LightGreen;
-                        }
-                        else if (action == "setValue")
-                        {
-                            var value = Microsoft.VisualBasic.Interaction.InputBox("Digite o valor:", "Definir Valor", "");
-                            if (!string.IsNullOrEmpty(value))
-                            {
-                                element.SendKeys(value);
-                                e.Node.BackColor = Color.LightYellow; // Indicate value was set
-                            }
-                        }
-                        else if (action == "showDetails" && !(bool)actionInfo.Loaded) // Check if details need loading
-                        {
-                            e.Node.Nodes.Clear(); // Clear placeholder if any
-                            try
-                            {
-                                //https://github.com/FlaUI/FlaUI.WebDriver
-                                //https://learn.microsoft.com/en-us/windows/win32/winauto/uiauto-automation-element-propids
-                                // Fetch details on demand
-                                var location = element.Location;
-                                var size = element.Size;
-                                var enabled = element.Enabled;
-                                var displayed = element.Displayed;
-                                var selected = element.Selected;
-                                var tipo = element.TagName;
-                                var valueAttr = element.GetAttribute("Value");
-                                var name = element.GetDomAttribute("Name");
-                                var tipo2 = element.GetDomAttribute("ControlType");
-                                var text = element.Text;
-
-                                e.Node.Nodes.Add(new TreeNode($"ID: {element}"));
-                                e.Node.Nodes.Add(new TreeNode($"Name: {name}"));
-                                e.Node.Nodes.Add(new TreeNode($"Valor: {valueAttr ?? text ?? "Nenhum"}"));
-                                e.Node.Nodes.Add(new TreeNode($"Tipo: {tipo}"));
-                                e.Node.Nodes.Add(new TreeNode($"Tipo 2: {tipo2}"));
-                                e.Node.Nodes.Add(new TreeNode($"Posição: ({location.X}, {location.Y})"));
-                                e.Node.Nodes.Add(new TreeNode($"Tamanho: {size.Width}x{size.Height}"));
-                                e.Node.Nodes.Add(new TreeNode($"Habilitado: {enabled}"));
-                                e.Node.Nodes.Add(new TreeNode($"Visível: {displayed}"));
-                                e.Node.Nodes.Add(new TreeNode($"Selecionado: {selected}"));
-
-                                // Mark as loaded
-                                e.Node.Tag = new { Action = "showDetails", Element = element, Loaded = true };
-                                e.Node.Expand(); // Expand to show details
-                            }
-                            catch (Exception detailEx)
-                            {
-                                e.Node.Nodes.Add(new TreeNode($"Erro ao carregar detalhes: {detailEx.Message}"));
-                                Log($"ERRO: Falha ao obter detalhes do elemento: {detailEx.Message}", Color.Red);
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Log($"ERRO: Erro ao executar ação '{action}': {ex.Message}", Color.Red);
-                        e.Node.BackColor = Color.LightCoral; // Indicate error
-                    }
-                }
-            };
+            Log("============================", Color.Blue);
+            Log("Painel de Dados analisado com sucesso.", Color.Green);
+            return true;
         }
         catch (Exception ex)
         {
-            _elementTree.Nodes.Add(new TreeNode($"Erro ao carregar elementos: {ex.Message}"));
+            Log($"ERRO: Falha ao encontrar ou analisar Painel de Dados: {ex.Message}", Color.Red);
+            try { Log($"Título da janela atual durante falha na análise: {_driver?.Title}", Color.Orange); } catch { }
+            return false;
         }
     }
 
+
+    // --- UI Event Handlers ---
+
+    private void StartSession_Click(object sender, EventArgs e)
+    {
+        // Call the Try method, log result based on return value
+        if (TryStartSession())
+        {
+            Log("StartSession_Click: Sessão iniciada com sucesso via botão.", Color.Green);
+        }
+        else
+        {
+            Log("StartSession_Click: Falha ao iniciar sessão via botão.", Color.Red);
+        }
+    }
+
+    private void Login_Click(object sender, EventArgs e)
+    {
+        // Call the Try method
+        if (TryLogin())
+        {
+             Log("Login_Click: Login realizado com sucesso via botão.", Color.Green);
+        }
+         else
+        {
+             Log("Login_Click: Falha no login via botão.", Color.Red);
+        }
+    }
+
+     private async void Open_Click(object sender, EventArgs e) // Make async
+    {
+        // Call TryOpenMenu first
+        if (await TryOpenMenuAsync("Size", "Size[RM022]")) // Await the async method
+        {
+            Log("Open_Click: Menu 'Tamanho do Contêiner' aberto com sucesso via botão.", Color.Green);
+            // If opening the menu succeeds, then try parsing the panel
+            if(TryParseDataPanel())
+            {
+                 Log("Open_Click: Painel de dados analisado com sucesso após abrir menu.", Color.Green);
+            }
+            else
+            {
+                 Log("Open_Click: Falha ao analisar painel de dados após abrir menu.", Color.Red);
+            }
+        }
+         else
+        {
+             Log("Open_Click: Falha ao abrir menu 'Tamanho do Contêiner' via botão.", Color.Red);
+        }
+    }
+
+    private async void gate_Click(object sender, EventArgs e) // Make async
+    {
+        // Call the Try method
+         if (await TryOpenMenuAsync("Truck Transaction", "Truck Transaction[ER025]")) // Await the async method
+         {
+              Log("gate_Click: Menu 'Transação de Caminhão' aberto com sucesso via botão.", Color.Green);
+         }
+         else
+         {
+              Log("gate_Click: Falha ao abrir menu 'Transação de Caminhão' via botão.", Color.Red);
+         }
+    }
+
+    private async void ShowcaseSequence_Click(object sender, EventArgs e)
+    {
+        Log("Iniciando sequência de demonstração...", Color.Magenta);
+
+        // Step 1: Start Session
+        Log("Passo 1: Iniciando Sessão...", Color.Cyan);
+        if (!TryStartSession())
+        {
+            Log("Passo 1 FALHOU. Abortando sequência.", Color.Red);
+            return;
+        }
+        Log("Passo 1 SUCESSO.", Color.Green);
+
+        // Step 2: Login
+        Log("Passo 2: Realizando Login...", Color.Cyan);
+        if (!TryLogin())
+        {
+            Log("Passo 2 FALHOU. Abortando sequência.", Color.Red);
+            return;
+        }
+        Log("Passo 2 SUCESSO.", Color.Green);
+
+        // Step 3: Open Menu
+        Log("Passo 3: Abrindo Menu 'Tamanho do Contêiner'...", Color.Cyan);
+        if (!await TryOpenMenuAsync("Size", "Size[RM022]")) // Use async version
+        {
+            Log("Passo 3 FALHOU. Abortando sequência.", Color.Red);
+            return;
+        }
+        Log("Passo 3 SUCESSO.", Color.Green);
+
+        // Step 4: Parse Data Panel
+        Log("Passo 4: Analisando Painel de Dados...", Color.Cyan);
+        if (!TryParseDataPanel())
+        {
+            Log("Passo 4 FALHOU. Sequência incompleta.", Color.Red);
+        }
+        else
+        {
+            Log("Passo 4 SUCESSO.", Color.Green);
+        }
+
+        Log("Sequência de demonstração finalizada.", Color.Magenta);
+    }
+
+     // Asynchronous version of TryOpenMenu needed for await in ShowcaseSequence_Click
+    private async Task<bool> TryOpenMenuAsync(string menuSearchText, string expectedWindowTitlePart)
+    {
+        // This simply wraps the synchronous version for now.
+        // For true async, the underlying Selenium/Appium calls would need async equivalents if available.
+        return await Task.Run(() => TryOpenMenu(menuSearchText, expectedWindowTitlePart));
+    }
+
+
     private async void RefreshElements_Click(object sender, EventArgs e)
     {
+         if (!_sessionActive || _driver == null)
+        {
+            Log("Atualizar Elementos falhou: Sessão não ativa.", Color.Red);
+            return;
+        }
         try
         {
             var xpath = string.IsNullOrWhiteSpace(_xpathInput.Text) ? "//*" : _xpathInput.Text;
-            BuildElementTree(xpath);
+            Log($"Atualizando elementos com XPath: {xpath}", Color.Blue);
+            // Consider running BuildElementTree on a background thread if it's slow
+            await Task.Run(() => BuildElementTree(xpath));
             Log($"Elementos atualizados com sucesso (XPath: {xpath})", Color.Green);
         }
         catch (Exception ex)
@@ -321,373 +528,213 @@ public class WebDriverNavigator : Form
         }
     }
 
-    private void Open_Click(object sender, EventArgs e)
+    private void BuildElementTree(string xpath)
     {
-        OpenMenu("Size", "Size[RM022]"); //Conteiner Size
-        //BuildElementTree("//*[@Name='Row 1']"); // funciona
-        //BuildElementTree("//*[@Name='Data Panel']/*"); // funciona
-        //BuildElementTree("//*[@Name='Data Panel']/*[@Value='40']"); // nao funciona
-        //BuildElementTree("//*[@Value.Value='40']"); // nao funciona
-        //BuildElementTree("//*[Value.Value='40']"); // nao funciona
-        //BuildElementTree("//*[@ControlType='ListItem']"); // nao funciona
-        //BuildElementTree("//*[contains(@ControlType,'ListItem')]"); // nao funciona
-        //BuildElementTree("//*[contains(@Name,'Row')]"); // Nao funciona
-        ParseDataPanel();
+        if (!_sessionActive || _driver == null)
+        {
+            Log("Construir Árvore de Elementos falhou: Sessão não ativa.", Color.Red);
+             _elementTree.Nodes.Clear();
+             _elementTree.Nodes.Add(new TreeNode("Sessão não ativa."));
+            return;
+        }
 
+        // Use Invoke to update UI thread-safely if called from background thread
+        if (_elementTree.InvokeRequired)
+        {
+            _elementTree.Invoke(new Action(() => BuildElementTree(xpath)));
+            return;
+        }
 
-    }
-
-    private List<Dictionary<string, string>> ParseDataPanel()
-    {
-        var tableData = new List<Dictionary<string, string>>();
         try
         {
-            // Get headers
-            var headers = _driver.FindElements(By.XPath("//*[@Name='Header Panel']/*"), 10)
-                                .Select(h => h.Text)
-                                .ToList();
+            _elementTree.Nodes.Clear();
+            Log("Construindo árvore de elementos com XPath: " + xpath);
 
-            // Get rows
-            var rows = _driver.FindElements(By.XPath("//*[@Name='Data Panel']/*"), 10);
+            // Use explicit wait to find elements
+            var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(5)); // Short timeout for finding elements
+            var elements = wait.Until(d => d.FindElements(By.XPath(xpath)));
 
-            Log("==== DATA PANEL CONTENTS ====", Color.Blue);
+            Log($"Encontrados {elements.Count} elementos");
 
-            // Log headers
-            Log($"Headers: {string.Join(";", headers)}", Color.DarkBlue);
+            if (!elements.Any())
+            {
+                 _elementTree.Nodes.Add(new TreeNode($"Nenhum elemento encontrado para XPath: {xpath}"));
+                 return;
+            }
 
-            foreach (var row in rows)
+            foreach (var element in elements)
             {
                 try
                 {
-                    var cells = row.Text.Split(";");
-                    var rowData = new Dictionary<string, string>();
+                    // Check if element is still valid before accessing properties
+                    // Basic check: access a simple property like TagName
+                    _ = element.TagName;
 
-                    for (int i = 0; i < Math.Min(headers.Count, cells.Length); i++)
+                    var name = element.GetDomAttribute("Name");
+                    var tipo = element.GetDomAttribute("ControlType");
+                    var value = element.GetAttribute("Value") ?? element.Text;
+
+                    var nodeText = $"{name ?? "Sem Nome"} ({tipo ?? "Sem Tipo"})";
+                    if (!string.IsNullOrWhiteSpace(value))
                     {
-                        rowData[headers[i]] = cells[i].Trim();
+                        nodeText += $" - Valor: {value}";
                     }
 
-                    tableData.Add(rowData);
-                    Log($"Row: {string.Join(";", rowData.Values)}", Color.DarkBlue);
+                    var node = new TreeNode(nodeText) { Tag = element };
+
+                    // Add action sub-nodes
+                    var clickNode = new TreeNode("Click") { Tag = new ElementAction { Action = "click", Element = element } };
+                    var setValueNode = new TreeNode("Set Value") { Tag = new ElementAction { Action = "setValue", Element = element } };
+                    var clearValueNode = new TreeNode("Clear") { Tag = new ElementAction { Action = "clear", Element = element } };
+                    var detailsNode = new TreeNode("Details") { Tag = new ElementAction { Action = "showDetails", Element = element, Loaded = false } };
+
+                    node.Nodes.Add(clickNode);
+                    node.Nodes.Add(setValueNode);
+                    node.Nodes.Add(clearValueNode);
+                    node.Nodes.Add(detailsNode);
+
+                    _elementTree.Nodes.Add(node);
                 }
-                catch (Exception ex)
+                catch (StaleElementReferenceException)
                 {
-                    Log($"Error parsing row: {ex.Message}", Color.Red);
+                    Log("Pulando elemento obsoleto durante construção da árvore.", Color.Orange);
+                    continue; // Skip this element
+                }
+                 catch (Exception ex)
+                {
+                     Log($"Erro ao processar elemento durante construção da árvore: {ex.Message}", Color.Orange);
+                     // Optionally add an error node
+                     // _elementTree.Nodes.Add(new TreeNode($"Error processing element: {ex.Message}"));
                 }
             }
-            Log("============================", Color.Blue);
+
+            // Remove previous handler before adding a new one to prevent duplicates
+            _elementTree.NodeMouseClick -= ElementTree_NodeMouseClick;
+            _elementTree.NodeMouseClick += ElementTree_NodeMouseClick;
+
+        }
+        catch (WebDriverTimeoutException)
+        {
+             Log($"Timeout esperando por elementos com XPath: {xpath}", Color.Orange);
+             _elementTree.Nodes.Add(new TreeNode($"Timeout encontrando elementos: {xpath}"));
         }
         catch (Exception ex)
         {
-            Log($"Error finding Data Panel: {ex.Message}", Color.Red);
-        }
-        return tableData;
-    }
-
-    private void OpenMenu(string textoPesquisa, string nomeJanela)
-    {
-        try
-        {
-            Log("Abrindo menu: " + textoPesquisa);
-
-            _driver.SwitchTo().ActiveElement().SendKeys(OpenQA.Selenium.Keys.Control + "o");
-
-            new Actions(_driver)
-                .SendKeys(textoPesquisa)
-                .SendKeys(OpenQA.Selenium.Keys.ArrowDown)
-                .SendKeys(OpenQA.Selenium.Keys.Enter)
-                .SendKeys(OpenQA.Selenium.Keys.Enter)
-                .SendKeys(OpenQA.Selenium.Keys.Enter)
-                .Perform();
-
-            Log("Aguardando menu abrir: " + textoPesquisa);
-
-            new WebDriverWait(_driver, TimeSpan.FromSeconds(10))
-                .Until(d => _driver.Title.ToUpper().Contains(textoPesquisa.ToUpper()));
-
-            if (!_driver.Title.ToUpper().Contains(textoPesquisa.ToUpper()))
-                throw new Exception($"Janela '{_driver.Title}' diferente da janela esperada '{nomeJanela}'");
-
-            Log("Aberta: " + _driver.Title);
-
-            Log("Operação Abrir concluída com sucesso", Color.Green);
-
-        }
-        catch (Exception ex)
-        {
-            Log($"ERRO: Erro ao enviar Ctrl+O: {ex.Message}", Color.Red);
+            Log($"Erro ao construir árvore de elementos: {ex.Message}", Color.Red);
+            _elementTree.Nodes.Add(new TreeNode($"Erro ao carregar elementos: {ex.Message}"));
         }
     }
 
-    private async void gate_Click(object sender, EventArgs e)
+     // Separate handler for node clicks
+    private async void ElementTree_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
     {
-        OpenMenu("Truck Transaction", "Truck Transaction[ER025]");
-    }
-
-    private void Login_Click(object sender, EventArgs e)
-    {
-        try
+        if (e.Node?.Tag is ElementAction actionInfo)
         {
-            var win = _driver.WindowHandles;
-            _driver.SwitchTo().Window(win.First());
+            var element = actionInfo.Element;
+            var action = actionInfo.Action;
 
-            // Find elements with timeout
-            var userNameField = _driver.FindElement(By.Id("txtUserName"), 10);
-            var passwordField = _driver.FindElement(By.Id("txtPassword"), 10);
-            var okButton = _driver.FindElement(By.Id("btnOK"), 10);
-
-            // Wait for and interact with username field
-            userNameField.WaitForElement(_driver);
-            userNameField.Click();
-            userNameField.SendKeys(_usernameInput.Text);
-            Log("Usuário inserido", Color.Blue);
-
-            // Wait for and interact with password field
-            passwordField.WaitForElement(_driver);
-            passwordField.SendKeys(_passwordInput.Text);
-            Log("Senha inserida", Color.Blue);
-
-            // Wait for and click OK button
-            okButton.WaitForElement(_driver);
-            okButton.Click();
-            Log("Botão OK clicado", Color.Blue);
-
-            // Verifica sucesso do login
-
-            // Esperar nova tela
-            new WebDriverWait(_driver, TimeSpan.FromSeconds(10))
-                .Until(d => _driver.WindowHandles.Count > 0);
-
-            // Mudar para a nova tela
-            _driver.SwitchTo().Window(_driver.WindowHandles.First());
-
-            Log("Aberta: " + _driver.Title);
-
-            var janelaEsperada = "CTOS DIS";
-            if (_driver.Title != janelaEsperada)
-                throw new Exception($"Janela '{_driver.Title}' diferente da janela esperada '{janelaEsperada}'");
-
-            Log("Login realizado com sucesso", Color.Green);
-
-        }
-        catch (Exception ex)
-        {
-            Log($"ERRO: Falha no login: {ex.Message}", Color.Red);
-        }
-    }
-// Method to attempt starting a session
-private bool TryStartSession()
-{
-    Log("Attempting to start session...", Color.Blue);
-    try
-    {
-        var opt = FlaUIDriverOptions.ForApp("C:\\Users\\Beltzac\\Desktop\\DIS\\CM.CTOS.WinUIAdmin.exe");
-        _driver = new WindowsDriver(new Uri("http://192.168.56.56:4723/"), opt);
-        _sessionActive = true;
-        // _sessionInfo might be null if InitializeComponents hasn't fully run or if called early
-        if (_sessionInfo != null) _sessionInfo.Text = $"ID da Sessão: {_sessionId}";
-        Log("Session started successfully.", Color.Green);
-        return true;
-    }
-    catch (Exception ex)
-    {
-        if (_sessionInfo != null) _sessionInfo.Text = $"Error: {ex.Message}";
-        Log($"Failed to start session: {ex.Message}", Color.Red);
-        _sessionActive = false;
-        return false;
-    }
-}
-
-// Method to attempt login
-private bool TryLogin()
-{
-    Log("Attempting to login...", Color.Blue);
-    try
-    {
-        var win = _driver.WindowHandles;
-        _driver.SwitchTo().Window(win.First());
-
-        var userNameField = _driver.FindElement(By.Id("txtUserName"), 10);
-        var passwordField = _driver.FindElement(By.Id("txtPassword"), 10);
-        var okButton = _driver.FindElement(By.Id("btnOK"), 10);
-
-        userNameField.WaitForElement(_driver);
-        userNameField.Click();
-        userNameField.SendKeys(_usernameInput.Text);
-        Log("Username entered.", Color.Blue);
-
-        passwordField.WaitForElement(_driver);
-        passwordField.SendKeys(_passwordInput.Text);
-        Log("Password entered.", Color.Blue);
-
-        okButton.WaitForElement(_driver);
-        okButton.Click();
-        Log("OK button clicked.", Color.Blue);
-
-        new WebDriverWait(_driver, TimeSpan.FromSeconds(10))
-            .Until(d => _driver.WindowHandles.Count > 0); // Basic check, might need refinement
-
-        _driver.SwitchTo().Window(_driver.WindowHandles.First());
-        Log("Switched to window: " + _driver.Title, Color.Blue);
-
-        var expectedWindowTitle = "CTOS DIS";
-        if (!_driver.Title.Contains(expectedWindowTitle)) // Use Contains for flexibility
-        {
-             throw new Exception($"Expected window title '{expectedWindowTitle}' not found. Actual: '{_driver.Title}'");
-        }
-
-        Log("Login successful.", Color.Green);
-        return true;
-    }
-    catch (Exception ex)
-    {
-        Log($"ERROR: Login failed: {ex.Message}", Color.Red);
-        return false;
-    }
-}
-
-// Method to attempt opening a menu
-private bool TryOpenMenu(string menuSearchText, string expectedWindowTitlePart)
-{
-    Log($"Attempting to open menu: {menuSearchText}", Color.Blue);
-    try
-    {
-        _driver.SwitchTo().ActiveElement().SendKeys(OpenQA.Selenium.Keys.Control + "o");
-
-        new Actions(_driver)
-            .SendKeys(menuSearchText)
-            .SendKeys(OpenQA.Selenium.Keys.ArrowDown)
-            .SendKeys(OpenQA.Selenium.Keys.Enter)
-            .SendKeys(OpenQA.Selenium.Keys.Enter)
-            .SendKeys(OpenQA.Selenium.Keys.Enter)
-            .Perform();
-
-        Log($"Waiting for menu '{menuSearchText}' to open...", Color.Blue);
-
-        // Wait for the window title to contain the expected part
-        bool titleMatches = new WebDriverWait(_driver, TimeSpan.FromSeconds(10))
-            .Until(d => d.Title.ToUpper().Contains(expectedWindowTitlePart.ToUpper()));
-
-        if (!titleMatches)
-        {
-            throw new Exception($"Expected window title part '{expectedWindowTitlePart}' not found. Actual title: '{_driver.Title}'");
-        }
-
-        Log($"Menu opened successfully: {_driver.Title}", Color.Green);
-        return true;
-    }
-    catch (Exception ex)
-    {
-        Log($"ERROR: Failed to open menu '{menuSearchText}': {ex.Message}", Color.Red);
-        return false;
-    }
-}
-
-// Method to attempt parsing the data panel
-private bool TryParseDataPanel()
-{
-    Log("Attempting to parse Data Panel...", Color.Blue);
-    var tableData = new List<Dictionary<string, string>>();
-    try
-    {
-        var headers = _driver.FindElements(By.XPath("//*[@Name='Header Panel']/*"), 10)
-                              .Select(h => h.Text)
-                              .ToList();
-
-        var rows = _driver.FindElements(By.XPath("//*[@Name='Data Panel']/*"), 10);
-
-        if (!headers.Any() || !rows.Any())
-        {
-             Log("Warning: Headers or rows not found in Data Panel.", Color.Orange);
-             // Decide if this is a failure or just empty data
-             // return false; // Uncomment if empty panel is considered a failure
-        }
-
-        Log("==== DATA PANEL CONTENTS ====", Color.Blue);
-        Log($"Headers: {string.Join(";", headers)}", Color.DarkBlue);
-
-        foreach (var row in rows)
-        {
             try
             {
-                var cells = row.Text.Split(';'); // Assuming semicolon delimiter
-                var rowData = new Dictionary<string, string>();
+                 // Check if element is still valid
+                 _ = element.TagName;
 
-                for (int i = 0; i < Math.Min(headers.Count, cells.Length); i++)
+                if (action == "click")
                 {
-                    rowData[headers[i]] = cells[i].Trim();
+                    Log($"Tentando clicar no elemento: {element.GetDomAttribute("Name") ?? element.TagName}", Color.Blue); // Use TagName instead of Id
+                    element.Click();
+                    e.Node.BackColor = Color.LightGreen;
+                    Log("Clique realizado com sucesso.", Color.Green);
+                    // Optional: Refresh tree after click?
+                    // RefreshElements_Click(null, EventArgs.Empty);
                 }
-                tableData.Add(rowData);
-                Log($"Row: {string.Join(";", rowData.Values)}", Color.DarkBlue);
+                else if (action == "setValue")
+                {
+                    var value = Microsoft.VisualBasic.Interaction.InputBox("Digite o valor:", "Set Value", "");
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                         Log($"Tentando definir valor '{value}' para o elemento: {element.GetDomAttribute("Name") ?? element.TagName}", Color.Blue); // Use TagName instead of Id
+                        element.SendKeys(value);
+                        e.Node.BackColor = Color.LightYellow;
+                        Log("Valor definido com sucesso.", Color.Green);
+                    }
+                }
+                else if (action == "clear")
+                {
+                    Log($"Tentando limpar o valor para o elemento: {element.GetDomAttribute("Name") ?? element.TagName}", Color.Blue); // Use TagName instead of Id
+                    element.Clear();
+                    e.Node.BackColor = Color.LightYellow;
+                    Log("Valor limpo com sucesso.", Color.Green);
+                }
+                else if (action == "showDetails" && !actionInfo.Loaded)
+                {
+                    e.Node.Nodes.Clear(); // Clear placeholder
+                    Log($"Carregando detalhes para o elemento: {element.GetDomAttribute("Name") ?? element.TagName}", Color.Blue); // Use TagName instead of Id
+                    try
+                    {
+                        // Fetch details (consider doing this in a background task if slow)
+                        var details = await Task.Run(() => GetElementDetails(element));
+
+                        foreach(var detail in details)
+                        {
+                            e.Node.Nodes.Add(new TreeNode(detail));
+                        }
+
+                        actionInfo.Loaded = true; // Mark as loaded
+                        e.Node.Tag = actionInfo; // Update the tag
+                        e.Node.Expand();
+                         Log("Detalhes carregados.", Color.Green);
+                    }
+                    catch (Exception detailEx)
+                    {
+                        e.Node.Nodes.Add(new TreeNode($"Erro ao carregar detalhes: {detailEx.Message}"));
+                        Log($"ERRO: Falha ao obter detalhes do elemento: {detailEx.Message}", Color.Red);
+                    }
+                }
+            }
+            catch (StaleElementReferenceException)
+            {
+                 Log($"ERRO: Ação '{action}' falhou. Elemento obsoleto.", Color.Red);
+                 e.Node.BackColor = Color.Gray; // Indicate stale
+                 e.Node.Text += " (Obsoleto)";
             }
             catch (Exception ex)
             {
-                // Log row-specific error but continue processing other rows
-                Log($"Error parsing row: {ex.Message}", Color.Red);
+                Log($"ERRO: Falha ao executar ação '{action}': {ex.Message}", Color.Red);
+                e.Node.BackColor = Color.LightCoral; // Indicate error
             }
         }
-        Log("============================", Color.Blue);
-        Log("Data Panel parsed successfully.", Color.Green);
-        return true; // Return true even if some rows had errors, as long as the panel itself was accessed
     }
-    catch (Exception ex)
+
+    // Helper to get element details
+    private List<string> GetElementDetails(IWebElement element)
     {
-        Log($"ERROR: Failed to find or parse Data Panel: {ex.Message}", Color.Red);
-        return false; // Return false if the panel couldn't be accessed at all
+         var details = new List<string>();
+         // Removed ID as it's not directly available: try{ details.Add($"ID: {element.Id}"); } catch{}
+         try{ details.Add($"Nome: {element.GetDomAttribute("Name")}"); } catch{}
+         try{ details.Add($"Valor: {element.GetAttribute("Value") ?? element.Text ?? "N/D"}"); } catch{}
+         try{ details.Add($"Tipo Controle: {element.GetDomAttribute("ControlType")}"); } catch{}
+         try{ details.Add($"Tag: {element.TagName}"); } catch{}
+         try{ details.Add($"Localização: ({element.Location.X}, {element.Location.Y})"); } catch{}
+         try{ details.Add($"Tamanho: {element.Size.Width}x{element.Size.Height}"); } catch{}
+         try{ details.Add($"Habilitado: {element.Enabled}"); } catch{}
+         try{ details.Add($"Visível: {element.Displayed}"); } catch{}
+         try{ details.Add($"Selecionado: {element.Selected}"); } catch{}
+         // Add more attributes as needed
+         // try{ details.Add($"ClassName: {element.GetDomAttribute("ClassName")}"); } catch{}
+         // try{ details.Add($"AutomationId: {element.GetDomAttribute("AutomationId")}"); } catch{}
+         return details;
     }
-}
 
-
-
-// --- New Event Handler for Showcase Button ---
-private async void ShowcaseSequence_Click(object sender, EventArgs e)
-{
-    Log("Starting showcase sequence...", Color.Magenta);
-
-    // Step 1: Start Session
-    Log("Step 1: Starting Session...", Color.Cyan);
-    if (!TryStartSession())
+     // Helper class for storing action info in Tree node Tag
+    private class ElementAction
     {
-        Log("Step 1 FAILED. Aborting sequence.", Color.Red);
-        return;
-    }
-    Log("Step 1 SUCCESS.", Color.Green);
-
-    // Step 2: Login
-    Log("Step 2: Performing Login...", Color.Cyan);
-    if (!TryLogin())
-    {
-        Log("Step 2 FAILED. Aborting sequence.", Color.Red);
-        return;
-    }
-    Log("Step 2 SUCCESS.", Color.Green);
-
-    // Step 3: Open Menu
-    Log("Step 3: Opening Menu 'Size'...", Color.Cyan);
-    if (!TryOpenMenu("Size", "Size[RM022]")) // Pass expected title part
-    {
-        Log("Step 3 FAILED. Aborting sequence.", Color.Red);
-        return;
-    }
-    Log("Step 3 SUCCESS.", Color.Green);
-
-    // Step 4: Parse Data Panel
-    Log("Step 4: Parsing Data Panel...", Color.Cyan);
-    if (!TryParseDataPanel())
-    {
-        Log("Step 4 FAILED. Sequence incomplete.", Color.Red);
-        // Decide if you want to return or just log failure
-        // return;
-    }
-    else
-    {
-        Log("Step 4 SUCCESS.", Color.Green);
+        public string Action { get; set; }
+        public IWebElement Element { get; set; }
+        public bool Loaded { get; set; } // For details node
     }
 
-    Log("Showcase sequence finished.", Color.Magenta);
-}
 
-
+    // --- Main Entry Point ---
     [STAThread]
     public static void Main()
     {
@@ -696,18 +743,70 @@ private async void ShowcaseSequence_Click(object sender, EventArgs e)
         Application.Run(new WebDriverNavigator());
     }
 
+    // --- Logging Utility ---
     private void Log(string message, Color? color = null)
     {
+        // Ensure thread-safe UI updates
         if (_logTextBox != null)
         {
+             if (_logTextBox.InvokeRequired)
+            {
+                _logTextBox.Invoke(new Action(() => LogInternal(message, color)));
+            }
+            else
+            {
+                LogInternal(message, color);
+            }
+        }
+    }
+
+     private void LogInternal(string message, Color? color)
+    {
+        try
+        {
             _logTextBox.SelectionStart = _logTextBox.TextLength;
-            if (color != null)
+            _logTextBox.SelectionLength = 0; // Ensure no text is selected
+
+            if (color.HasValue)
             {
                 _logTextBox.SelectionColor = color.Value;
             }
+            else
+            {
+                 _logTextBox.SelectionColor = _logTextBox.ForeColor; // Default color
+            }
+
             _logTextBox.AppendText($"{DateTime.Now:HH:mm:ss} - {message}{Environment.NewLine}");
-            _logTextBox.SelectionColor = _logTextBox.ForeColor;
+            _logTextBox.SelectionColor = _logTextBox.ForeColor; // Reset color for subsequent text
             _logTextBox.ScrollToCaret();
+        }
+        catch (Exception ex)
+        {
+            // Fallback logging if RichTextBox fails
+            Console.WriteLine($"ERRO DE LOG: {ex.Message}");
+            Console.WriteLine($"{DateTime.Now:HH:mm:ss} - {message}");
+        }
+    }
+
+    // Ensure driver is disposed when form closes
+    protected override void OnFormClosing(FormClosingEventArgs e)
+    {
+        base.OnFormClosing(e);
+        if (_driver != null)
+        {
+            Log("Fechando sessão...", Color.Orange);
+            try
+            {
+                _driver.Quit();
+                _driver.Dispose();
+                 Log("Sessão fechada.", Color.Orange);
+            }
+            catch (Exception ex)
+            {
+                 Log($"Erro ao fechar sessão: {ex.Message}", Color.Red);
+            }
+            _driver = null;
+            _sessionActive = false;
         }
     }
 }
