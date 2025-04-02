@@ -14,7 +14,6 @@ using Utils;
 public class WebDriverNavigator : Form
 {
     private IWebDriver _driver;
-    private string _sessionId;
     private bool _sessionActive = false;
 
     private RichTextBox _logTextBox;
